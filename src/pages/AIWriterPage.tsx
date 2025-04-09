@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, Loader2, Send, PlusCircle } from "lucide-react";
+import { AlertCircle, Loader2, Send, PlusCircle, ImageIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -121,6 +121,7 @@ const AIWriterPage = () => {
   const [selectedApi, setSelectedApi] = useState(apiIntegrations[0]);
   const [selectedApiModel, setSelectedApiModel] = useState("");
   const [showImageGenerator, setShowImageGenerator] = useState(false);
+  const [showAiImageGenerator, setShowAiImageGenerator] = useState(false);
   
   // New options
   const [tone, setTone] = useState("professional");
@@ -226,7 +227,10 @@ const AIWriterPage = () => {
       }
       
       const data = await response.json();
-      const content = data.choices[0]?.message?.content || "";
+      // Fix the error by checking if data.choices exists and has at least one item
+      const content = data.choices && data.choices.length > 0 
+        ? data.choices[0]?.message?.content || "" 
+        : "";
       
       setGeneratedContent(content);
       
@@ -380,6 +384,7 @@ const AIWriterPage = () => {
     const imgTag = `<img src="${imageUrl}" alt="Article image" class="my-4 rounded-md max-w-full" />`;
     setGeneratedContent(prevContent => prevContent + '\n' + imgTag);
     setShowImageGenerator(false);
+    setShowAiImageGenerator(false);
   };
 
   return (
@@ -567,23 +572,34 @@ const AIWriterPage = () => {
                 <Label htmlFor="auto-publish">Auto-publish to WordPress when saving</Label>
               </div>
             )}
+            
+            <div className="pt-4">
+              <Button 
+                variant="outline"
+                className="w-full mb-4" 
+                onClick={() => setShowAiImageGenerator(true)}
+                disabled={loading}
+              >
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Generate AI Image
+              </Button>
+              
+              <Button 
+                className="w-full btn-gradient-primary"
+                onClick={handleGenerate}
+                disabled={loading || !title || !topic || (modelType !== "external" && !openRouterConfig.apiKey)}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  "Generate Content"
+                )}
+              </Button>
+            </div>
           </CardContent>
-          <CardFooter>
-            <Button 
-              className="w-full btn-gradient-primary"
-              onClick={handleGenerate}
-              disabled={loading || !title || !topic || (modelType !== "external" && !openRouterConfig.apiKey)}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                "Generate Content"
-              )}
-            </Button>
-          </CardFooter>
         </Card>
         
         <div className="space-y-6">
@@ -632,11 +648,15 @@ const AIWriterPage = () => {
             <ContentTools content={generatedContent} />
           )}
 
-          {showImageGenerator && (
+          {showAiImageGenerator && (
             <ImageGenerator onImageSelect={handleAddImage} />
           )}
 
-          {!showImageGenerator && generatedContent && (
+          {showImageGenerator && !showAiImageGenerator && (
+            <ImageGenerator onImageSelect={handleAddImage} />
+          )}
+
+          {!showImageGenerator && !showAiImageGenerator && generatedContent && (
             <Button 
               variant="outline" 
               onClick={() => setShowImageGenerator(true)}

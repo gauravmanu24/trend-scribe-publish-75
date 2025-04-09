@@ -29,7 +29,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImag
     
     switch (action) {
       case "format":
-        // Wrap selected text with HTML tag
+        // Wrap selected text with HTML tag (without XML declaration)
         newText = value.substring(0, start) + 
                   `<${tag}>${selectedText}</${tag}>` + 
                   value.substring(end);
@@ -37,7 +37,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImag
         break;
         
       case "list":
-        // Create list with items
+        // Create list with items (without XML declaration)
         const items = selectedText.split('\n').filter(Boolean);
         let listHtml = `<${tag}>\n`;
         items.forEach(item => {
@@ -50,6 +50,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImag
         break;
         
       case "heading":
+        // Create heading (without XML declaration)
         newText = value.substring(0, start) + 
                   `<h${tag}>${selectedText}</h${tag}>` + 
                   value.substring(end);
@@ -57,6 +58,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImag
         break;
         
       case "quote":
+        // Create blockquote (without XML declaration)
         newText = value.substring(0, start) + 
                   `<blockquote>${selectedText}</blockquote>` + 
                   value.substring(end);
@@ -71,6 +73,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImag
         const url = prompt("Enter URL:", "https://");
         if (!url) return;
         
+        // Create link (without XML declaration)
         newText = value.substring(0, start) + 
                   `<a href="${url}" target="_blank">${selectedText || url}</a>` + 
                   value.substring(end);
@@ -96,7 +99,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImag
   };
   
   const renderPreview = () => {
-    return { __html: value };
+    // Ensure we don't have any XML declarations in the HTML content
+    let cleanContent = value;
+    if (cleanContent.includes('<?xml')) {
+      cleanContent = cleanContent.replace(/<\?xml[^>]*\?>/g, '');
+    }
+    
+    return { __html: cleanContent };
   };
   
   return (

@@ -1,9 +1,9 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pause, Play, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pause, Play, Trash2, ExternalLink, RefreshCw, Loader2 } from "lucide-react";
 import { Feed } from "@/types";
 import { 
   DropdownMenu,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAppStore } from "@/lib/store";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 interface FeedCardProps {
   feed: Feed;
@@ -24,6 +25,8 @@ interface FeedCardProps {
 const FeedCard: React.FC<FeedCardProps> = ({ feed, onEdit }) => {
   const updateFeed = useAppStore((state) => state.updateFeed);
   const removeFeed = useAppStore((state) => state.removeFeed);
+  const [checking, setChecking] = useState(false);
+  const { toast } = useToast();
   
   const toggleStatus = () => {
     updateFeed(feed.id, { 
@@ -44,13 +47,84 @@ const FeedCard: React.FC<FeedCardProps> = ({ feed, onEdit }) => {
     }
   };
 
+  // Function to check if feed URL is valid
+  const checkFeed = async () => {
+    setChecking(true);
+    
+    try {
+      // Use a CORS proxy to fetch the RSS feed
+      const proxyUrl = "https://api.allorigins.win/raw?url=";
+      const encodedFeedUrl = encodeURIComponent(feed.url);
+      const response = await fetch(`${proxyUrl}${encodedFeedUrl}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch feed: ${response.statusText}`);
+      }
+      
+      // Check if the response is valid
+      const contentType = response.headers.get('content-type');
+      let isValidFeed = false;
+      
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        isValidFeed = data.items && data.items.length > 0;
+      } else {
+        // Parse as XML
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+        
+        // Check if XML has items
+        isValidFeed = xmlDoc.querySelectorAll("item").length > 0;
+      }
+      
+      if (isValidFeed) {
+        toast({
+          title: "Valid RSS feed",
+          description: "The feed URL is valid and contains content.",
+        });
+        
+        // Update feed status if it was in error state
+        if (feed.status === "error") {
+          updateFeed(feed.id, { status: "active" });
+        }
+      } else {
+        throw new Error("Feed contains no items");
+      }
+    } catch (error) {
+      console.error("Feed check error:", error);
+      toast({
+        title: "Invalid feed",
+        description: error instanceof Error ? error.message : "Could not validate the feed URL",
+        variant: "destructive",
+      });
+      
+      // Update feed status to error
+      updateFeed(feed.id, { status: "error" });
+    } finally {
+      setChecking(false);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg font-medium">{feed.name}</CardTitle>
-            <div className="text-sm text-muted-foreground mt-1">{feed.url}</div>
+          <div className="overflow-hidden">
+            <CardTitle className="text-lg font-medium truncate">{feed.name}</CardTitle>
+            <div className="text-sm text-muted-foreground mt-1 break-all">
+              <div className="flex items-center gap-1">
+                <span className="truncate max-w-[180px] md:max-w-[220px] inline-block">{feed.url}</span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-4 w-4 ml-1 p-0" 
+                  onClick={() => window.open(feed.url, '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -64,6 +138,9 @@ const FeedCard: React.FC<FeedCardProps> = ({ feed, onEdit }) => {
               <DropdownMenuItem onClick={() => onEdit(feed)}>Edit Feed</DropdownMenuItem>
               <DropdownMenuItem onClick={toggleStatus}>
                 {feed.status === "active" ? "Pause Feed" : "Activate Feed"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={checkFeed}>
+                Check Feed
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => removeFeed(feed.id)}
@@ -102,26 +179,42 @@ const FeedCard: React.FC<FeedCardProps> = ({ feed, onEdit }) => {
             <Trash2 className="h-4 w-4 mr-1" />
             Remove
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={feed.status === "active" 
-              ? "text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" 
-              : "text-green-600 hover:text-green-700 hover:bg-green-50"}
-            onClick={toggleStatus}
-          >
-            {feed.status === "active" ? (
-              <>
-                <Pause className="h-4 w-4 mr-1" />
-                Pause
-              </>
-            ) : (
-              <>
-                <Play className="h-4 w-4 mr-1" />
-                Activate
-              </>
-            )}
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              onClick={checkFeed}
+              disabled={checking}
+            >
+              {checking ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              <span className="ml-1 hidden sm:inline">Check</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={feed.status === "active" 
+                ? "text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" 
+                : "text-green-600 hover:text-green-700 hover:bg-green-50"}
+              onClick={toggleStatus}
+            >
+              {feed.status === "active" ? (
+                <>
+                  <Pause className="h-4 w-4 mr-1" />
+                  Pause
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4 mr-1" />
+                  Activate
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </CardFooter>
     </Card>

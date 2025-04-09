@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import FeedCard from "@/components/FeedCard";
 import AddFeedDialog from "@/components/AddFeedDialog";
@@ -17,8 +17,8 @@ const FeedsPage = () => {
   const addArticle = useAppStore((state) => state.addArticle);
   const lastManualRun = useAppStore((state) => state.lastManualRun);
   const setLastManualRun = useAppStore((state) => state.setLastManualRun);
-  const [editFeed, setEditFeed] = React.useState<Feed | undefined>(undefined);
-  const [isRunning, setIsRunning] = React.useState(false);
+  const [editFeed, setEditFeed] = useState<Feed | undefined>(undefined);
+  const [isRunning, setIsRunning] = useState(false);
   const { toast } = useToast();
   
   const handleEdit = (feed: Feed) => {
@@ -63,20 +63,58 @@ const FeedsPage = () => {
         });
         
         try {
-          const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`);
+          // Use a CORS proxy to fetch the RSS feed
+          const proxyUrl = "https://api.allorigins.win/raw?url=";
+          const encodedFeedUrl = encodeURIComponent(feed.url);
+          const response = await fetch(`${proxyUrl}${encodedFeedUrl}`);
           
           if (!response.ok) {
             throw new Error(`Failed to fetch feed: ${response.statusText}`);
           }
           
-          const data = await response.json();
+          let feedData;
+          const contentType = response.headers.get('content-type');
           
-          if (data.status !== 'ok') {
-            throw new Error(`RSS error: ${data.message || 'Invalid feed'}`);
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            
+            if (data.status !== 'ok') {
+              throw new Error(`RSS error: ${data.message || 'Invalid feed'}`);
+            }
+            
+            feedData = data;
+          } else {
+            // Parse XML
+            const xmlText = await response.text();
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+            
+            // Extract items from XML
+            const items = xmlDoc.querySelectorAll("item");
+            
+            if (items.length === 0) {
+              throw new Error("No items found in the feed");
+            }
+            
+            // Get the first item
+            const firstItem = items[0];
+            
+            const title = firstItem.querySelector("title")?.textContent || "";
+            const description = firstItem.querySelector("description")?.textContent || "";
+            const link = firstItem.querySelector("link")?.textContent || "";
+            
+            // Create a similar structure to the JSON format
+            feedData = {
+              items: [{
+                title,
+                description,
+                link
+              }]
+            };
           }
           
-          if (data.items && data.items.length > 0) {
-            const item = data.items[0];
+          if (feedData.items && feedData.items.length > 0) {
+            const item = feedData.items[0];
             
             const title = `Analysis of: ${item.title}`;
             const topic = `${item.title}. ${item.description || ''}`;
@@ -110,7 +148,10 @@ const FeedsPage = () => {
             }
             
             const aiData = await aiResponse.json();
-            const content = aiData.choices[0]?.message?.content || "";
+            // Fix for potential undefined error
+            const content = aiData.choices && aiData.choices.length > 0 
+              ? aiData.choices[0]?.message?.content || "" 
+              : "";
             
             if (!content) {
               throw new Error("AI generated empty content");
