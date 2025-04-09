@@ -1,9 +1,8 @@
-
 import React from "react";
 import { useAppStore } from "@/lib/store";
 import FeedCard from "@/components/FeedCard";
 import AddFeedDialog from "@/components/AddFeedDialog";
-import { Feed } from "@/types";
+import { Feed, Article } from "@/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,11 +28,9 @@ const FeedsPage = () => {
     setEditFeed(undefined);
   };
   
-  // Function to manually run the feed processing
   const handleManualRun = async () => {
     if (isRunning) return;
     
-    // Check if there are active feeds
     const activeFeeds = feeds.filter(feed => feed.status === "active");
     if (activeFeeds.length === 0) {
       toast({
@@ -44,7 +41,6 @@ const FeedsPage = () => {
       return;
     }
     
-    // Check if OpenRouter API key is configured
     if (!openRouterConfig.apiKey) {
       toast({
         title: "OpenRouter API key missing",
@@ -57,18 +53,15 @@ const FeedsPage = () => {
     setIsRunning(true);
     
     try {
-      // Process each active feed
       let totalProcessed = 0;
       
       for (const feed of activeFeeds) {
-        // Show toast for each feed processing
         toast({
           title: `Processing feed: ${feed.name}`,
           description: "Fetching and analyzing content...",
         });
         
         try {
-          // Fetch the RSS feed (in a real implementation, you'd use a proper RSS parser)
           const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`);
           
           if (!response.ok) {
@@ -81,18 +74,14 @@ const FeedsPage = () => {
             throw new Error(`RSS error: ${data.message || 'Invalid feed'}`);
           }
           
-          // Use only the first item from the feed for testing
           if (data.items && data.items.length > 0) {
             const item = data.items[0];
             
-            // Generate content based on the feed item
             const title = `Analysis of: ${item.title}`;
             const topic = `${item.title}. ${item.description || ''}`;
             
-            // Determine which model to use for content generation
             const modelToUse = openRouterConfig.freeModel || "meta-llama/llama-3.1-8b-instruct:free";
             
-            // Call OpenRouter API to generate content
             const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
               method: "POST",
               headers: {
@@ -126,23 +115,20 @@ const FeedsPage = () => {
               throw new Error("AI generated empty content");
             }
             
-            // Add generated article
             const article = {
               title,
               content,
               feedId: feed.id,
               sourceTitle: item.title,
               sourceLink: item.link,
-              status: "generated",
+              status: "generated" as Article["status"],
             };
             
             addArticle(article);
             totalProcessed++;
             
-            // If WordPress is configured, publish automatically
             if (wordPressConfig.isConnected) {
               try {
-                // Make the WordPress API call
                 const wpResponse = await fetch(`${wordPressConfig.url}/wp-json/wp/v2/posts`, {
                   method: 'POST',
                   headers: {
@@ -163,8 +149,6 @@ const FeedsPage = () => {
                 
                 const publishedPost = await wpResponse.json();
                 
-                // Update the article with published status
-                // Note: In a real implementation, you would get the article ID and update it
                 toast({
                   title: "Article published",
                   description: "The article was successfully published to WordPress.",
@@ -189,10 +173,8 @@ const FeedsPage = () => {
         }
       }
       
-      // Update last manual run timestamp
       setLastManualRun(new Date().toISOString());
       
-      // Final toast with summary
       toast({
         title: "Processing complete",
         description: `Generated ${totalProcessed} article${totalProcessed !== 1 ? 's' : ''} from ${activeFeeds.length} feed${activeFeeds.length !== 1 ? 's' : ''}.`,
@@ -287,7 +269,6 @@ const FeedsPage = () => {
         </>
       )}
       
-      {/* Render dialog for editing if needed */}
       {editFeed && (
         <AddFeedDialog 
           editFeed={editFeed} 

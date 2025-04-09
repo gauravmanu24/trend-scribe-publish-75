@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Article } from "@/types";
 
 // Free models from OpenRouter
 const freeAiModels = [
@@ -76,18 +76,14 @@ const AIWriterPage = () => {
     setLoading(true);
     
     try {
-      // Determine which model to use based on the selected type
       let modelToUse = openRouterConfig.model;
       
       if (modelType === "free") {
-        // Use the selected free model from OpenRouter config
         modelToUse = openRouterConfig.freeModel || freeAiModels[0].value;
       } else if (modelType === "custom") {
-        // Use the custom model input
         modelToUse = customModel;
       }
       
-      // Make the actual API call to OpenRouter
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -119,7 +115,6 @@ const AIWriterPage = () => {
       
       setGeneratedContent(content);
       
-      // Update model config if needed
       if (modelType === "free") {
         updateOpenRouterConfig({ freeModel: modelToUse });
       } else if (modelType === "custom" && customModel && customModel !== openRouterConfig.model) {
@@ -153,22 +148,19 @@ const AIWriterPage = () => {
     }
     
     try {
-      // First save the article
       const article = {
         title,
         content: generatedContent,
         feedId: "manual",
         sourceTitle: "Manual Entry",
-        status: "generated",
+        status: "generated" as Article["status"],
       };
       
       addArticle(article);
       
-      // If auto-publish is enabled and WordPress is configured, publish directly
       if (autoPublish && wordPressConfig.isConnected) {
         setLoading(true);
         
-        // Make the actual WordPress API call
         const response = await fetch(`${wordPressConfig.url}/wp-json/wp/v2/posts`, {
           method: 'POST',
           headers: {
@@ -198,13 +190,11 @@ const AIWriterPage = () => {
         });
       }
       
-      // Reset form
       setTitle("");
       setTopic("");
       setGeneratedContent("");
       setCustomModel("");
       
-      // Navigate to articles
       navigate("/articles");
     } catch (error) {
       console.error("Publishing error:", error);
