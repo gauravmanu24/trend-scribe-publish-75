@@ -8,7 +8,7 @@ import { Copy, Check } from "lucide-react";
 
 const GoogleTrendsGenerator: React.FC<{ onUrlGenerated?: (url: string) => void }> = ({ onUrlGenerated }) => {
   const [country, setCountry] = useState("US");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("all");
   const [copied, setCopied] = useState(false);
 
   const countries = [
@@ -25,7 +25,7 @@ const GoogleTrendsGenerator: React.FC<{ onUrlGenerated?: (url: string) => void }
   ];
 
   const categories = [
-    { code: "", name: "All Categories" },
+    { code: "all", name: "All Categories" }, // Changed from empty string to "all"
     { code: "b", name: "Business" },
     { code: "e", name: "Entertainment" },
     { code: "m", name: "Health" },
@@ -36,7 +36,7 @@ const GoogleTrendsGenerator: React.FC<{ onUrlGenerated?: (url: string) => void }
 
   const generateUrl = () => {
     let url = `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${country}`;
-    if (category) {
+    if (category && category !== "all") { // Updated condition to check for "all"
       url += `&cat=${category}`;
     }
     return url;
