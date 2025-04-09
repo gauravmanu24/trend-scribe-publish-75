@@ -15,10 +15,12 @@ const initialState: AppState = {
   openRouterConfig: {
     apiKey: "",
     model: "anthropic/claude-3-opus:beta",
+    freeModel: "meta-llama/llama-3.1-8b-instruct:free",
   },
   articles: [],
   isPolling: false,
   pollingInterval: 60,
+  lastManualRun: null,
 };
 
 type StoreState = AppState & {
@@ -32,6 +34,7 @@ type StoreState = AppState & {
   removeArticle: (id: string) => void;
   setPolling: (isPolling: boolean) => void;
   setPollingInterval: (minutes: number) => void;
+  setLastManualRun: (date: string | null) => void;
   reset: () => void;
 };
 
@@ -97,6 +100,10 @@ export const useAppStore = create<StoreState>()(
       setPollingInterval: (minutes) =>
         set(() => ({
           pollingInterval: minutes,
+        })),
+      setLastManualRun: (date) =>
+        set(() => ({
+          lastManualRun: date,
         })),
       reset: () => set(initialState),
     }),

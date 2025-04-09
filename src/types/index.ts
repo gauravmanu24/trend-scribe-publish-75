@@ -18,6 +18,7 @@ export interface WordPressConfig {
 export interface OpenRouterConfig {
   apiKey: string; // In a real app, use secure storage
   model: string;
+  freeModel?: string;
 }
 
 export interface Article {
@@ -41,4 +42,5 @@ export interface AppState {
   articles: Article[];
   isPolling: boolean;
   pollingInterval: number; // in minutes
+  lastManualRun: string | null;
 }

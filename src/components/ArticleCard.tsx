@@ -26,6 +26,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, onView }) => {
         return <Badge variant="outline" className="bg-green-100 text-green-800">Published</Badge>;
       case "failed":
         return <Badge variant="outline" className="bg-red-100 text-red-800">Failed</Badge>;
+      case "pending":
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case "processing":
+        return <Badge variant="outline" className="bg-purple-100 text-purple-800">Processing</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
