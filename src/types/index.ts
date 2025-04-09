@@ -1,3 +1,4 @@
+
 export interface Feed {
   id: string;
   name: string;
@@ -26,7 +27,7 @@ export interface Article {
   feedId: string;
   sourceTitle?: string;
   sourceLink?: string;
-  status: "pending" | "processing" | "generated" | "published" | "failed";
+  status: "pending" | "processing" | "generated" | "published" | "failed" | "draft";
   createdAt: string;
   publishedAt?: string;
   wordpressPostId?: number;

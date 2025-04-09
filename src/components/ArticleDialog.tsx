@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Article } from "@/types";
 import { format } from "date-fns";
-import { ExternalLink, Send } from "lucide-react";
+import { ExternalLink, Send, Loader2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 
