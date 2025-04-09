@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Article } from "@/types";
 import { useAppStore } from "@/lib/store";
 import { format } from "date-fns";
-import { ExternalLink, RefreshCw, Send, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { ExternalLink, Trash2 } from "lucide-react";
 
 interface ArticleCardProps {
   article: Article;
@@ -15,40 +14,8 @@ interface ArticleCardProps {
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, onView }) => {
-  const updateArticle = useAppStore((state) => state.updateArticle);
   const removeArticle = useAppStore((state) => state.removeArticle);
-  const { toast } = useToast();
-  const [publishing, setPublishing] = React.useState(false);
   
-  const handlePublish = async () => {
-    setPublishing(true);
-    
-    try {
-      // In a real app, this would call the WordPress API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      updateArticle(article.id, { 
-        status: "published",
-        publishedAt: new Date().toISOString()
-      });
-      
-      toast({
-        title: "Article published",
-        description: "The article was successfully published to WordPress.",
-      });
-    } catch (error) {
-      toast({
-        title: "Publishing failed",
-        description: "Failed to publish article to WordPress.",
-        variant: "destructive",
-      });
-      
-      updateArticle(article.id, { status: "failed" });
-    } finally {
-      setPublishing(false);
-    }
-  };
-
   const getStatusBadge = (status: Article["status"]) => {
     switch (status) {
       case "draft":
@@ -128,28 +95,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, onView }) => {
             >
               View
             </Button>
-            
-            {article.status === "generated" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-news-700 text-white hover:bg-news-800"
-                disabled={publishing}
-                onClick={handlePublish}
-              >
-                {publishing ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
-                    Publishing...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-1" />
-                    Publish
-                  </>
-                )}
-              </Button>
-            )}
           </div>
         </div>
       </CardFooter>

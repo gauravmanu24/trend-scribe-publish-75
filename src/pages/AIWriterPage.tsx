@@ -10,16 +10,21 @@ import { AlertCircle, Loader2, Send } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const AIWriterPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const openRouterConfig = useAppStore((state) => state.openRouterConfig);
+  const updateOpenRouterConfig = useAppStore((state) => state.updateOpenRouterConfig);
   const addArticle = useAppStore((state) => state.addArticle);
   const [loading, setLoading] = React.useState(false);
   const [title, setTitle] = React.useState("");
   const [topic, setTopic] = React.useState("");
   const [generatedContent, setGeneratedContent] = React.useState("");
+  const [useCustomModel, setUseCustomModel] = React.useState(false);
+  const [customModel, setCustomModel] = React.useState("");
   
   const handleGenerate = async () => {
     if (!title || !topic) {
@@ -43,6 +48,9 @@ const AIWriterPage = () => {
     setLoading(true);
     
     try {
+      // Determine which model to use
+      const modelToUse = useCustomModel ? customModel : openRouterConfig.model;
+      
       // Make the actual API call to OpenRouter
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -51,7 +59,7 @@ const AIWriterPage = () => {
           "Authorization": `Bearer ${openRouterConfig.apiKey}`,
         },
         body: JSON.stringify({
-          model: openRouterConfig.model,
+          model: modelToUse,
           messages: [
             {
               role: "system",
@@ -74,6 +82,11 @@ const AIWriterPage = () => {
       const content = data.choices[0]?.message?.content || "";
       
       setGeneratedContent(content);
+      
+      // If using custom model and it's different from current config, save it
+      if (useCustomModel && customModel && customModel !== openRouterConfig.model) {
+        updateOpenRouterConfig({ model: customModel });
+      }
       
       toast({
         title: "Content generated",
@@ -118,10 +131,22 @@ const AIWriterPage = () => {
     setTitle("");
     setTopic("");
     setGeneratedContent("");
+    setUseCustomModel(false);
+    setCustomModel("");
     
     // Navigate to articles
     navigate("/articles");
   };
+
+  // Predefined models for dropdown
+  const predefinedModels = [
+    { value: "anthropic/claude-3-opus:beta", label: "Claude 3 Opus" },
+    { value: "anthropic/claude-3-sonnet:beta", label: "Claude 3 Sonnet" },
+    { value: "anthropic/claude-3-haiku:beta", label: "Claude 3 Haiku" },
+    { value: "google/gemini-pro", label: "Google Gemini Pro" },
+    { value: "openai/gpt-4o", label: "GPT-4o" },
+    { value: "meta-llama/llama-3-70b-instruct", label: "Llama 3 70B" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -164,6 +189,51 @@ const AIWriterPage = () => {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
               />
+            </div>
+            
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="use-custom-model" 
+                  checked={useCustomModel} 
+                  onCheckedChange={(checked) => setUseCustomModel(checked === true)}
+                />
+                <Label htmlFor="use-custom-model">Use custom AI model</Label>
+              </div>
+              
+              {useCustomModel ? (
+                <div className="space-y-2">
+                  <Label htmlFor="custom-model">Custom Model ID</Label>
+                  <Input 
+                    id="custom-model"
+                    placeholder="Enter model ID (e.g., anthropic/claude-3-opus:beta)"
+                    value={customModel}
+                    onChange={(e) => setCustomModel(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the full model ID from OpenRouter
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="model">AI Model</Label>
+                  <Select 
+                    value={openRouterConfig.model} 
+                    onValueChange={(value) => updateOpenRouterConfig({ model: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select AI model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {predefinedModels.map((model) => (
+                        <SelectItem key={model.value} value={model.value}>
+                          {model.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </CardContent>
           <CardFooter>

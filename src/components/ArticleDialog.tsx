@@ -138,12 +138,12 @@ const ArticleDialog: React.FC<ArticleDialogProps> = ({
             <Button variant="outline">Close</Button>
           </DialogClose>
           
-          {article.status === "generated" && (
+          {(article.status === "generated" || article.status === "draft") && (
             <Button 
               variant="default"
               className="bg-news-700 hover:bg-news-800 text-white"
               onClick={handlePublish}
-              disabled={publishing}
+              disabled={publishing || !wordPressConfig.isConnected}
             >
               {publishing ? (
                 <>
