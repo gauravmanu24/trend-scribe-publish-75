@@ -29,6 +29,7 @@ const ArticleDialog: React.FC<ArticleDialogProps> = ({
   onOpenChange 
 }) => {
   const updateArticle = useAppStore((state) => state.updateArticle);
+  const wordPressConfig = useAppStore((state) => state.wordPressConfig);
   const { toast } = useToast();
   const [publishing, setPublishing] = React.useState(false);
   
@@ -40,12 +41,37 @@ const ArticleDialog: React.FC<ArticleDialogProps> = ({
     setPublishing(true);
     
     try {
-      // Simulate WordPress publishing
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Check if WordPress is configured
+      if (!wordPressConfig.url || !wordPressConfig.username || !wordPressConfig.password) {
+        throw new Error("WordPress configuration is incomplete. Please check settings.");
+      }
+
+      // Make the actual WordPress API call
+      const response = await fetch(`${wordPressConfig.url}/wp-json/wp/v2/posts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa(`${wordPressConfig.username}:${wordPressConfig.password}`),
+        },
+        body: JSON.stringify({
+          title: article.title,
+          content: article.content,
+          status: 'publish',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `WordPress error: ${response.statusText}`);
+      }
+      
+      const publishedPost = await response.json();
       
       updateArticle(article.id, { 
         status: "published", 
-        publishedAt: new Date().toISOString() 
+        publishedAt: new Date().toISOString(),
+        wordpressPostId: publishedPost.id,
+        wordpressPostUrl: publishedPost.link
       });
       
       toast({
@@ -53,9 +79,10 @@ const ArticleDialog: React.FC<ArticleDialogProps> = ({
         description: "The article was successfully published to WordPress.",
       });
     } catch (error) {
+      console.error("Publishing error:", error);
       toast({
         title: "Publishing failed",
-        description: "Failed to publish article to WordPress.",
+        description: error instanceof Error ? error.message : "Failed to publish article to WordPress.",
         variant: "destructive",
       });
       updateArticle(article.id, { status: "failed" });
@@ -118,9 +145,32 @@ const ArticleDialog: React.FC<ArticleDialogProps> = ({
               onClick={handlePublish}
               disabled={publishing}
             >
-              <Send className="h-4 w-4 mr-2" />
-              Publish to WordPress
+              {publishing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Publish to WordPress
+                </>
+              )}
             </Button>
+          )}
+          
+          {article.wordpressPostUrl && (
+            <a 
+              href={article.wordpressPostUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-2"
+            >
+              <Button variant="outline">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View Published Post
+              </Button>
+            </a>
           )}
         </DialogFooter>
       </DialogContent>

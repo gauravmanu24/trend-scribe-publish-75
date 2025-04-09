@@ -43,37 +43,47 @@ const AIWriterPage = () => {
     setLoading(true);
     
     try {
-      // In a real app, this would call the OpenRouter API
-      // Simulating API call and response delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Make the actual API call to OpenRouter
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openRouterConfig.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: openRouterConfig.model,
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional content writer who creates well-researched, informative articles. Write in clear, engaging prose with proper sections and paragraphs."
+            },
+            {
+              role: "user",
+              content: `Write a comprehensive article with the title: "${title}" about the topic: "${topic}". Include an introduction, main sections with headers, and a conclusion. Make it informative, factual, and engaging for readers.`
+            }
+          ],
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+      }
       
-      // Sample generated content
-      const sampleContent = `
-The latest trends in ${topic} are showing significant shifts in how people interact with this technology. Industry experts are noting several key developments that are worth watching.
-
-First, there's a growing emphasis on user experience and accessibility. Companies are recognizing that ${topic} needs to be approachable for users of all technical backgrounds. This democratization is leading to wider adoption and more diverse use cases.
-
-Another important trend is the integration of artificial intelligence and machine learning capabilities. These technologies are enhancing ${topic}'s functionality, making systems more adaptive and responsive to user needs. The ability to process and learn from vast amounts of data is opening new possibilities for innovation.
-
-Sustainability is also becoming a central concern in ${topic} development. Organizations are increasingly focusing on reducing energy consumption and environmental impact, responding to both regulatory pressures and consumer demands for more responsible technology.
-
-Security remains a critical priority, with threats becoming more sophisticated. Experts are advocating for "security by design" approaches, where protection measures are built into systems from the ground up rather than added as afterthoughts.
-
-Finally, there's a shift toward more collaborative and open-source development models. This community-driven approach is accelerating innovation and helping to solve complex challenges through collective expertise.
-
-As ${topic} continues to evolve, staying informed about these trends will be essential for businesses and individuals looking to leverage its benefits and prepare for future developments.
-      `;
+      const data = await response.json();
+      const content = data.choices[0]?.message?.content || "";
       
-      setGeneratedContent(sampleContent);
+      setGeneratedContent(content);
       
       toast({
         title: "Content generated",
         description: "Your article has been successfully generated.",
       });
     } catch (error) {
+      console.error("Generation error:", error);
       toast({
         title: "Generation failed",
-        description: "Failed to generate article content.",
+        description: error instanceof Error ? error.message : "Failed to generate article content.",
         variant: "destructive",
       });
     } finally {
