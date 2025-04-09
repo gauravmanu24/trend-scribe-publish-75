@@ -16,16 +16,21 @@ import {
 import { useAppStore } from "@/lib/store";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { processFeed } from "@/lib/feedProcessor";
 
 interface FeedCardProps {
   feed: Feed;
   onEdit: (feed: Feed) => void;
+  isRunning?: boolean;
 }
 
-const FeedCard: React.FC<FeedCardProps> = ({ feed, onEdit }) => {
+const FeedCard: React.FC<FeedCardProps> = ({ feed, onEdit, isRunning: globalIsRunning = false }) => {
   const updateFeed = useAppStore((state) => state.updateFeed);
   const removeFeed = useAppStore((state) => state.removeFeed);
+  const openRouterConfig = useAppStore((state) => state.openRouterConfig);
+  const wordPressConfig = useAppStore((state) => state.wordPressConfig);
   const [checking, setChecking] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
   
   const toggleStatus = () => {
@@ -106,6 +111,52 @@ const FeedCard: React.FC<FeedCardProps> = ({ feed, onEdit }) => {
     }
   };
 
+  const runFeedNow = async () => {
+    if (processing || globalIsRunning) return;
+    
+    if (!openRouterConfig.apiKey) {
+      toast({
+        title: "OpenRouter API key missing",
+        description: "Please configure your OpenRouter API key in settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setProcessing(true);
+    
+    toast({
+      title: `Processing feed: ${feed.name}`,
+      description: "Fetching and analyzing content...",
+    });
+    
+    try {
+      const result = await processFeed(feed, openRouterConfig, wordPressConfig);
+      
+      if (result.success) {
+        toast({
+          title: "Processing complete",
+          description: "Successfully generated article from feed.",
+        });
+      } else {
+        toast({
+          title: "Processing failed",
+          description: result.error || "Failed to process feed",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Feed processing error:", error);
+      toast({
+        title: "Processing failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -141,6 +192,12 @@ const FeedCard: React.FC<FeedCardProps> = ({ feed, onEdit }) => {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={checkFeed}>
                 Check Feed
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={runFeedNow}
+                disabled={processing || globalIsRunning || feed.status !== "active"}
+              >
+                Run Now
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => removeFeed(feed.id)}
@@ -194,6 +251,22 @@ const FeedCard: React.FC<FeedCardProps> = ({ feed, onEdit }) => {
               )}
               <span className="ml-1 hidden sm:inline">Check</span>
             </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+              onClick={runFeedNow}
+              disabled={processing || globalIsRunning || feed.status !== "active"}
+            >
+              {processing ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-1" />
+              )}
+              Run Now
+            </Button>
+            
             <Button 
               variant="ghost" 
               size="sm" 

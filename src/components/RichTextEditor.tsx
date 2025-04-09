@@ -5,7 +5,6 @@ import {
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, 
   List, ListOrdered, Quote, Heading1, Heading2, Heading3, Image, Link, Undo, Redo 
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface RichTextEditorProps {
   value: string;

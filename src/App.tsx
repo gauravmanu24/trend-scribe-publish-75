@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import FeedsPage from "./pages/FeedsPage";
 import ArticlesPage from "./pages/ArticlesPage";
 import AIWriterPage from "./pages/AIWriterPage";
+import WebStoryGeneratorPage from "./pages/WebStoryGeneratorPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/feeds" element={<FeedsPage />} />
             <Route path="/articles" element={<ArticlesPage />} />
             <Route path="/ai-writer" element={<AIWriterPage />} />
+            <Route path="/web-stories" element={<WebStoryGeneratorPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/about" element={<AboutUsPage />} />
             <Route path="/contact" element={<ContactUsPage />} />
