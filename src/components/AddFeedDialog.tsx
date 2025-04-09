@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -20,6 +20,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Feed } from "@/types";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import FeedValidator from "./FeedValidator";
+import GoogleTrendsGenerator from "./GoogleTrendsGenerator";
 
 const feedSchema = z.object({
   name: z.string().min(1, "Feed name is required"),
@@ -39,8 +42,9 @@ const AddFeedDialog: React.FC<AddFeedDialogProps> = ({ editFeed, onComplete }) =
   const addFeed = useAppStore(state => state.addFeed);
   const updateFeed = useAppStore(state => state.updateFeed);
   const [open, setOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = useState<"manual" | "validator" | "trends">("manual");
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FeedFormValues>({
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FeedFormValues>({
     resolver: zodResolver(feedSchema),
     defaultValues: editFeed 
       ? { name: editFeed.name, url: editFeed.url, category: editFeed.category } 
@@ -87,6 +91,16 @@ const AddFeedDialog: React.FC<AddFeedDialogProps> = ({ editFeed, onComplete }) =
     }
   };
 
+  const handleValidFeed = (url: string) => {
+    setValue("url", url);
+  };
+
+  const handleUrlGenerated = (url: string) => {
+    setValue("url", url);
+    setValue("name", "Google Trends " + (watch("category") || "Daily"));
+    setValue("category", "Trends");
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -95,7 +109,7 @@ const AddFeedDialog: React.FC<AddFeedDialogProps> = ({ editFeed, onComplete }) =
           <span>Add Feed</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{editFeed ? "Edit Feed" : "Add New Feed"}</DialogTitle>
@@ -105,57 +119,139 @@ const AddFeedDialog: React.FC<AddFeedDialogProps> = ({ editFeed, onComplete }) =
                 : "Add a new RSS feed to monitor trends and generate content."}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <div className="col-span-3">
-                <Input
-                  id="name"
-                  placeholder="Google Trends Tech"
-                  {...register("name")}
-                  className={errors.name ? "border-red-500" : ""}
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-                )}
+          
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mt-4">
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+              <TabsTrigger value="validator">Validate Feed</TabsTrigger>
+              <TabsTrigger value="trends">Google Trends</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="manual" className="space-y-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <div className="col-span-3">
+                  <Input
+                    id="name"
+                    placeholder="Google Trends Tech"
+                    {...register("name")}
+                    className={errors.name ? "border-red-500" : ""}
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="url" className="text-right">
-                RSS URL
-              </Label>
-              <div className="col-span-3">
-                <Input
-                  id="url"
-                  placeholder="https://trends.google.com/trends/trendingsearches/daily/rss?geo=US"
-                  {...register("url")}
-                  className={errors.url ? "border-red-500" : ""}
-                />
-                {errors.url && (
-                  <p className="text-red-500 text-sm mt-1">{errors.url.message}</p>
-                )}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="url" className="text-right">
+                  RSS URL
+                </Label>
+                <div className="col-span-3">
+                  <Input
+                    id="url"
+                    placeholder="https://trends.google.com/trends/trendingsearches/daily/rss?geo=US"
+                    {...register("url")}
+                    className={errors.url ? "border-red-500" : ""}
+                  />
+                  {errors.url && (
+                    <p className="text-red-500 text-sm mt-1">{errors.url.message}</p>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right">
-                Category
-              </Label>
-              <div className="col-span-3">
-                <Input
-                  id="category"
-                  placeholder="Technology"
-                  {...register("category")}
-                  className={errors.category ? "border-red-500" : ""}
-                />
-                {errors.category && (
-                  <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
-                )}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right">
+                  Category
+                </Label>
+                <div className="col-span-3">
+                  <Input
+                    id="category"
+                    placeholder="Technology"
+                    {...register("category")}
+                    className={errors.category ? "border-red-500" : ""}
+                  />
+                  {errors.category && (
+                    <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-          <DialogFooter>
+            </TabsContent>
+            
+            <TabsContent value="validator">
+              <FeedValidator onValidFeed={handleValidFeed} />
+              {watch("url") && (
+                <div className="mt-4 space-y-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name-validated" className="text-right">
+                      Name
+                    </Label>
+                    <div className="col-span-3">
+                      <Input
+                        id="name-validated"
+                        placeholder="Feed name"
+                        {...register("name")}
+                        className={errors.name ? "border-red-500" : ""}
+                      />
+                      {errors.name && (
+                        <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="category-validated" className="text-right">
+                      Category
+                    </Label>
+                    <div className="col-span-3">
+                      <Input
+                        id="category-validated"
+                        placeholder="Category"
+                        {...register("category")}
+                        className={errors.category ? "border-red-500" : ""}
+                      />
+                      {errors.category && (
+                        <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="trends">
+              <GoogleTrendsGenerator onUrlGenerated={handleUrlGenerated} />
+              {watch("url") && (
+                <div className="mt-4 space-y-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name-trends" className="text-right">
+                      Name
+                    </Label>
+                    <div className="col-span-3">
+                      <Input
+                        id="name-trends"
+                        {...register("name")}
+                        className={errors.name ? "border-red-500" : ""}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="category-trends" className="text-right">
+                      Category
+                    </Label>
+                    <div className="col-span-3">
+                      <Input
+                        id="category-trends"
+                        {...register("category")}
+                        className={errors.category ? "border-red-500" : ""}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+          
+          <DialogFooter className="mt-6">
             <DialogClose asChild>
               <Button type="button" variant="outline">
                 Cancel

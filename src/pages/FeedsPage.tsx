@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAppStore } from "@/lib/store";
 import FeedCard from "@/components/FeedCard";
@@ -93,11 +94,11 @@ const FeedsPage = () => {
                 messages: [
                   {
                     role: "system",
-                    content: "You are a professional content writer who creates well-researched, informative articles. Write in clear, engaging prose with proper sections and paragraphs."
+                    content: "You are a professional content writer who creates well-researched, informative articles. Write in clear, engaging prose with proper HTML formatting. Use h2, h3, h4 for headings, <ul> and <li> for lists, and <p> tags for paragraphs."
                   },
                   {
                     role: "user",
-                    content: `Write a comprehensive article with the title: "${title}" about the topic: "${topic}". Include an introduction, main sections with headers, and a conclusion. Make it informative, factual, and engaging for readers.`
+                    content: `Write a comprehensive article with the title: "${title}" about the topic: "${topic}". Format your response with proper HTML tags including h2, h3, h4 for headings, <ul> and <li> for lists, and <p> tags for paragraphs. Make it informative, factual, and engaging for readers.`
                   }
                 ],
                 temperature: 0.7,
@@ -226,7 +227,7 @@ const FeedsPage = () => {
       )}
       
       {!openRouterConfig.apiKey && (
-        <Alert variant="warning" className="bg-amber-50 text-amber-800 border-amber-200">
+        <Alert variant="warning">
           <AlertCircle className="h-4 w-4 text-amber-600" />
           <AlertDescription>
             OpenRouter API key is not configured. Please add it in settings to use the manual run feature.

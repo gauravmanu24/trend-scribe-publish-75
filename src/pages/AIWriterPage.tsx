@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Article } from "@/types";
+import AIWriterOptions from "@/components/AIWriterOptions";
 
 // Free models from OpenRouter
 const freeAiModels = [
@@ -52,7 +54,13 @@ const AIWriterPage = () => {
   const [generatedContent, setGeneratedContent] = React.useState("");
   const [modelType, setModelType] = React.useState("predefined"); // "predefined", "free", or "custom"
   const [customModel, setCustomModel] = React.useState("");
-  const [autoPublish, setAutoPublish] = React.useState(false);
+  const [autoPublish, setAutoPublish] = React.useState(true);
+  
+  // New options
+  const [tone, setTone] = React.useState("professional");
+  const [language, setLanguage] = React.useState("en");
+  const [wordCount, setWordCount] = React.useState(1000);
+  const [outputFormat, setOutputFormat] = React.useState("html");
   
   const handleGenerate = async () => {
     if (!title || !topic) {
@@ -84,6 +92,31 @@ const AIWriterPage = () => {
         modelToUse = customModel;
       }
       
+      // Language mapping for system prompt
+      const languageNames: {[key: string]: string} = {
+        en: "English", es: "Spanish", fr: "French", de: "German",
+        it: "Italian", pt: "Portuguese", ru: "Russian", ja: "Japanese",
+        zh: "Chinese", ar: "Arabic", hi: "Hindi"
+      };
+      
+      // Create a tailored system message based on the options
+      const systemMessage = `You are a professional content writer who creates well-researched, informative articles. 
+      Write in a ${tone} tone in ${languageNames[language] || "English"}. 
+      ${outputFormat === "html" ? "Format your response with proper HTML tags including h2, h3, h4 for headings, <ul> and <li> for lists, and <p> tags for paragraphs." : 
+        outputFormat === "markdown" ? "Format your response with proper Markdown syntax for headings, lists, and paragraphs." :
+        "Write in clear, well-structured paragraphs with proper sections."
+      }`;
+      
+      const userMessage = `Write a comprehensive article with the title: "${title}" about the topic: "${topic}". 
+      Write in ${languageNames[language] || "English"} using a ${tone} tone. 
+      The article should be approximately ${wordCount} words in length.
+      ${outputFormat === "html" ? 
+        "Format your response with proper HTML tags including <h2>, <h3>, <h4> for headings, <ul> and <li> for lists, and <p> tags for paragraphs." :
+        outputFormat === "markdown" ? 
+        "Format your response with proper Markdown syntax for headings (#, ##, ###), lists (-, *), and paragraphs." :
+        "Make it informative, factual, and engaging for readers with clear sections."
+      }`;
+      
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -95,11 +128,11 @@ const AIWriterPage = () => {
           messages: [
             {
               role: "system",
-              content: "You are a professional content writer who creates well-researched, informative articles. Write in clear, engaging prose with proper sections and paragraphs."
+              content: systemMessage
             },
             {
               role: "user",
-              content: `Write a comprehensive article with the title: "${title}" about the topic: "${topic}". Include an introduction, main sections with headers, and a conclusion. Make it informative, factual, and engaging for readers.`
+              content: userMessage
             }
           ],
           temperature: 0.7,
@@ -125,6 +158,11 @@ const AIWriterPage = () => {
         title: "Content generated",
         description: "Your article has been successfully generated.",
       });
+      
+      // Automatically save and publish if WordPress is connected
+      if (autoPublish && wordPressConfig.isConnected) {
+        await handlePublishToWordPress(title, content);
+      }
     } catch (error) {
       console.error("Generation error:", error);
       toast({
@@ -132,6 +170,49 @@ const AIWriterPage = () => {
         description: error instanceof Error ? error.message : "Failed to generate article content.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handlePublishToWordPress = async (articleTitle: string, articleContent: string) => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch(`${wordPressConfig.url}/wp-json/wp/v2/posts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa(`${wordPressConfig.username}:${wordPressConfig.password}`),
+        },
+        body: JSON.stringify({
+          title: articleTitle,
+          content: articleContent,
+          status: 'publish',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `WordPress error: ${response.statusText}`);
+      }
+      
+      const publishedData = await response.json();
+      
+      toast({
+        title: "Article published",
+        description: "The article was successfully published to WordPress.",
+      });
+      
+      return publishedData;
+    } catch (error) {
+      console.error("WordPress publishing error:", error);
+      toast({
+        title: "WordPress publishing failed",
+        description: error instanceof Error ? error.message : "Failed to publish to WordPress",
+        variant: "destructive",
+      });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -148,6 +229,9 @@ const AIWriterPage = () => {
     }
     
     try {
+      let wordpressPostId, wordpressPostUrl;
+      
+      // Always save article to local store
       const article = {
         title,
         content: generatedContent,
@@ -156,34 +240,35 @@ const AIWriterPage = () => {
         status: "generated" as Article["status"],
       };
       
-      addArticle(article);
-      
+      // Try publishing to WordPress if configured
       if (autoPublish && wordPressConfig.isConnected) {
-        setLoading(true);
-        
-        const response = await fetch(`${wordPressConfig.url}/wp-json/wp/v2/posts`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic ' + btoa(`${wordPressConfig.username}:${wordPressConfig.password}`),
-          },
-          body: JSON.stringify({
-            title: title,
-            content: generatedContent,
-            status: 'publish',
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || `WordPress error: ${response.statusText}`);
+        try {
+          const publishedData = await handlePublishToWordPress(title, generatedContent);
+          
+          if (publishedData && publishedData.id) {
+            wordpressPostId = publishedData.id;
+            wordpressPostUrl = publishedData.link;
+            
+            // Update article with WordPress data
+            addArticle({
+              ...article,
+              status: "published" as Article["status"],
+              wordpressPostId,
+              wordpressPostUrl,
+              publishedAt: new Date().toISOString(),
+            });
+          } else {
+            addArticle(article);
+          }
+        } catch (error) {
+          // If WordPress publishing fails, still save the article locally
+          addArticle(article);
+          throw error;
         }
-        
-        toast({
-          title: "Article published",
-          description: "The article was successfully published to WordPress.",
-        });
       } else {
+        // Just save locally
+        addArticle(article);
+        
         toast({
           title: "Article saved",
           description: "Your article has been saved.",
@@ -197,14 +282,8 @@ const AIWriterPage = () => {
       
       navigate("/articles");
     } catch (error) {
-      console.error("Publishing error:", error);
-      toast({
-        title: "Publishing failed",
-        description: error instanceof Error ? error.message : "Failed to publish article to WordPress.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      console.error("Saving error:", error);
+      // Error message already shown by handlePublishToWordPress
     }
   };
 
@@ -250,6 +329,17 @@ const AIWriterPage = () => {
                 onChange={(e) => setTopic(e.target.value)}
               />
             </div>
+            
+            <AIWriterOptions 
+              tone={tone}
+              setTone={setTone}
+              language={language}
+              setLanguage={setLanguage}
+              wordCount={wordCount}
+              setWordCount={setWordCount}
+              outputFormat={outputFormat}
+              setOutputFormat={setOutputFormat}
+            />
             
             <div className="space-y-4 pt-4">
               <Label>AI Model Type</Label>
