@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, Rss, Newspaper, Bot, WordPress, Code } from "lucide-react";
+import { ArrowRight, Rss, Newspaper, Bot, Globe, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -44,7 +44,7 @@ const FeaturesPage = () => {
       ]
     },
     {
-      icon: <WordPress className="h-10 w-10 text-primary" />,
+      icon: <Globe className="h-10 w-10 text-primary" />,
       title: "WordPress Integration",
       description: "Publish content directly to your WordPress site with full formatting and media support.",
       benefits: [

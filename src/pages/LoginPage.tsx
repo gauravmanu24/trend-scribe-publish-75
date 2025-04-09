@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, Loader2, User, Lock, Github, Google } from "lucide-react";
+import { AlertCircle, Loader2, User, Lock, Github, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -214,7 +213,7 @@ const LoginPage = () => {
                   Github
                 </Button>
                 <Button variant="outline">
-                  <Google className="mr-2 h-4 w-4" />
+                  <Globe className="mr-2 h-4 w-4" />
                   Google
                 </Button>
               </div>
@@ -309,7 +308,7 @@ const LoginPage = () => {
                   Github
                 </Button>
                 <Button variant="outline">
-                  <Google className="mr-2 h-4 w-4" />
+                  <Globe className="mr-2 h-4 w-4" />
                   Google
                 </Button>
               </div>
