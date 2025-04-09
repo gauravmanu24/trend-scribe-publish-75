@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, RefreshCcw, AlertCircle } from "lucide-react";
+import { Loader2, Check, RefreshCcw, AlertCircle, MonitorDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { freeAiModels, paidAiModels, apiServices } from "@/components/AIModels";
 
 const SettingsPage = () => {
   const { toast } = useToast();
@@ -23,18 +27,41 @@ const SettingsPage = () => {
   const resetStore = useAppStore((state) => state.reset);
   
   // Local form state
-  const [apiKey, setApiKey] = React.useState(openRouterConfig.apiKey);
-  const [model, setModel] = React.useState(openRouterConfig.model);
-  const [modelType, setModelType] = React.useState("paid");
-  const [wpUrl, setWpUrl] = React.useState(wordPressConfig.url);
-  const [wpUsername, setWpUsername] = React.useState(wordPressConfig.username);
-  const [wpPassword, setWpPassword] = React.useState(wordPressConfig.password);
-  const [interval, setInterval] = React.useState(pollingInterval.toString());
+  const [apiKey, setApiKey] = useState(openRouterConfig.apiKey);
+  const [model, setModel] = useState(openRouterConfig.model);
+  const [modelType, setModelType] = useState("paid");
+  const [wpUrl, setWpUrl] = useState(wordPressConfig.url);
+  const [wpUsername, setWpUsername] = useState(wordPressConfig.username);
+  const [wpPassword, setWpPassword] = useState(wordPressConfig.password);
+  const [interval, setInterval] = useState(pollingInterval.toString());
+  const [selectedService, setSelectedService] = useState("openrouter");
+  const [apiConfigValues, setApiConfigValues] = useState<{[key: string]: {[key: string]: string}}>({});
   
   // Loading states
-  const [testingWP, setTestingWP] = React.useState(false);
-  const [savingOpenRouter, setSavingOpenRouter] = React.useState(false);
-  const [resetting, setResetting] = React.useState(false);
+  const [testingWP, setTestingWP] = useState(false);
+  const [savingOpenRouter, setSavingOpenRouter] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [savingAPI, setSavingAPI] = useState(false);
+  
+  // Initialize API config values
+  React.useEffect(() => {
+    // Initialize with empty objects for each service
+    const initialValues: {[key: string]: {[key: string]: string}} = {};
+    apiServices.forEach(service => {
+      initialValues[service.id] = {};
+      service.configFields.forEach(field => {
+        initialValues[service.id][field.name] = "";
+      });
+    });
+    
+    // Fill in OpenRouter values if available
+    if (openRouterConfig.apiKey) {
+      initialValues.openrouter.apiKey = openRouterConfig.apiKey;
+      initialValues.openrouter.model = openRouterConfig.model;
+    }
+    
+    setApiConfigValues(initialValues);
+  }, []);
   
   const handleSaveOpenRouter = () => {
     setSavingOpenRouter(true);
@@ -42,7 +69,7 @@ const SettingsPage = () => {
     setTimeout(() => {
       updateOpenRouterConfig({
         apiKey,
-        model: modelType === "free" ? openRouterConfig.freeModel : model,
+        model: modelType === "free" ? openRouterConfig.freeModel || freeAiModels[0].value : model,
       });
       
       toast({
@@ -146,98 +173,216 @@ const SettingsPage = () => {
       setResetting(false);
     }
   };
+  
+  const handleApiConfigChange = (serviceId: string, fieldName: string, value: string) => {
+    setApiConfigValues(prev => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        [fieldName]: value
+      }
+    }));
+  };
+  
+  const handleSaveApiConfig = () => {
+    setSavingAPI(true);
+    
+    setTimeout(() => {
+      // Here we would save the API configuration
+      // For OpenRouter, we'll actually update the store
+      if (selectedService === "openrouter") {
+        const config = apiConfigValues.openrouter;
+        updateOpenRouterConfig({
+          apiKey: config.apiKey,
+          model: config.model,
+        });
+      }
+      
+      toast({
+        title: "API configuration saved",
+        description: `Your ${apiServices.find(s => s.id === selectedService)?.name} configuration has been saved.`,
+      });
+      
+      setSavingAPI(false);
+    }, 1000);
+  };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Settings</h1>
+      <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Settings</h1>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>OpenRouter AI Configuration</CardTitle>
+      <Card className="trendy-card">
+        <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10">
+          <CardTitle>AI Services Configuration</CardTitle>
           <CardDescription>
-            Configure your OpenRouter API key and model for AI content generation.
+            Configure your AI services for content generation
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="apiKey">API Key</Label>
-            <Input 
-              id="apiKey"
-              type="password" 
-              placeholder="Enter your OpenRouter API key" 
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary underline">OpenRouter</a>
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="modelType">AI Model Type</Label>
-            <Select value={modelType} onValueChange={setModelType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select model type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="paid">Paid Models (Higher quality)</SelectItem>
-                <SelectItem value="free">Free Models (Limited features)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Choose free models to save on API usage costs or paid models for higher quality content.
-            </p>
-          </div>
-          
-          {modelType === "paid" && (
-            <div className="space-y-2">
-              <Label htmlFor="model">AI Model</Label>
-              <Select value={model} onValueChange={setModel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select AI model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="anthropic/claude-3-opus:beta">Claude 3 Opus</SelectItem>
-                  <SelectItem value="anthropic/claude-3-sonnet:beta">Claude 3 Sonnet</SelectItem>
-                  <SelectItem value="anthropic/claude-3-haiku:beta">Claude 3 Haiku</SelectItem>
-                  <SelectItem value="google/gemini-pro">Google Gemini Pro</SelectItem>
-                  <SelectItem value="openai/gpt-4o">GPT-4o</SelectItem>
-                  <SelectItem value="meta-llama/llama-3-70b-instruct">Llama 3 70B</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {modelType === "paid" 
-                  ? "Select the AI model that best fits your needs and budget." 
-                  : "Using free model: Llama 3.1 8B (limited capabilities)"}
-              </p>
-            </div>
-          )}
+        <CardContent className="p-6">
+          <Tabs defaultValue="openrouter" value={selectedService} onValueChange={setSelectedService}>
+            <TabsList className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 mb-4">
+              {apiServices.map(service => (
+                <TabsTrigger key={service.id} value={service.id}>
+                  {service.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            
+            {apiServices.map(service => (
+              <TabsContent key={service.id} value={service.id} className="space-y-4 pt-2">
+                <div className="flex items-start space-x-4">
+                  {service.logoUrl && (
+                    <img 
+                      src={service.logoUrl} 
+                      alt={`${service.name} logo`}
+                      className="w-12 h-12 object-contain"
+                    />
+                  )}
+                  <div>
+                    <h3 className="text-lg font-medium">{service.name}</h3>
+                    <p className="text-sm text-muted-foreground">{service.description}</p>
+                    <a 
+                      href={service.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Visit {service.name} website
+                    </a>
+                  </div>
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-4">
+                  {service.configFields.map(field => (
+                    <div key={field.name} className="space-y-2">
+                      <Label htmlFor={`${service.id}-${field.name}`}>{field.label}</Label>
+                      
+                      {field.type === 'select' ? (
+                        <Select 
+                          value={apiConfigValues[service.id]?.[field.name] || ''} 
+                          onValueChange={(value) => handleApiConfigChange(service.id, field.name, value)}
+                        >
+                          <SelectTrigger id={`${service.id}-${field.name}`}>
+                            <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <ScrollArea className="h-80">
+                              {field.options?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </ScrollArea>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input 
+                          id={`${service.id}-${field.name}`}
+                          type={field.type} 
+                          placeholder={field.placeholder} 
+                          value={apiConfigValues[service.id]?.[field.name] || ''}
+                          onChange={(e) => handleApiConfigChange(service.id, field.name, e.target.value)}
+                        />
+                      )}
+                      
+                      {field.name === 'apiKey' && field.type === 'password' && (
+                        <p className="text-xs text-muted-foreground">
+                          Get your API key from {service.name}'s developer portal
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {service.id === 'openrouter' && (
+                  <div className="space-y-4 pt-4">
+                    <Label>AI Model Type</Label>
+                    <Tabs value={modelType} onValueChange={setModelType}>
+                      <TabsList className="grid grid-cols-2 w-full">
+                        <TabsTrigger value="paid">Paid Models</TabsTrigger>
+                        <TabsTrigger value="free">Free Models</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="paid" className="space-y-2 mt-4">
+                        <Select 
+                          value={model} 
+                          onValueChange={setModel}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select AI model" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <ScrollArea className="h-80">
+                              {paidAiModels.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </ScrollArea>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Paid models offer higher quality output but will use your OpenRouter credits
+                        </p>
+                      </TabsContent>
+                      
+                      <TabsContent value="free" className="space-y-2 mt-4">
+                        <Select 
+                          value={openRouterConfig.freeModel || freeAiModels[0].value} 
+                          onValueChange={(value) => updateOpenRouterConfig({ freeModel: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select free AI model" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <ScrollArea className="h-80">
+                              {freeAiModels.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </ScrollArea>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Free models don't consume API credits but may have lower quality or rate limits
+                        </p>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
         </CardContent>
         <CardFooter>
           <Button 
-            onClick={handleSaveOpenRouter} 
-            disabled={savingOpenRouter || (!apiKey && modelType === "paid")}
+            onClick={handleSaveApiConfig} 
+            disabled={savingAPI}
+            className="btn-gradient-primary"
           >
-            {savingOpenRouter ? (
+            {savingAPI ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (
-              "Save AI Settings"
+              "Save API Configuration"
             )}
           </Button>
         </CardFooter>
       </Card>
       
-      <Card>
-        <CardHeader>
+      <Card className="trendy-card">
+        <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10">
           <CardTitle>WordPress Connection</CardTitle>
           <CardDescription>
             Connect to your WordPress site for automatic content publishing.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-6 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="wpUrl">WordPress URL</Label>
             <Input 
@@ -268,7 +413,7 @@ const SettingsPage = () => {
               onChange={(e) => setWpPassword(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              We recommend using an <a href="https://wordpress.org/documentation/article/application-passwords/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Application Password</a> for security
+              We recommend using an <a href="https://wordpress.org/documentation/article/application-passwords/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Application Password</a> for security
             </p>
           </div>
           
@@ -283,6 +428,7 @@ const SettingsPage = () => {
           <Button 
             onClick={handleTestWordPress} 
             disabled={testingWP || !wpUrl || !wpUsername || !wpPassword}
+            className="btn-gradient-secondary"
           >
             {testingWP ? (
               <>
@@ -305,14 +451,14 @@ const SettingsPage = () => {
         </CardFooter>
       </Card>
       
-      <Card>
-        <CardHeader>
+      <Card className="trendy-card">
+        <CardHeader className="bg-gradient-to-r from-secondary/10 to-primary/10">
           <CardTitle>System Settings</CardTitle>
           <CardDescription>
             Configure system behavior and polling settings.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-6 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="interval">Polling Interval (minutes)</Label>
             <div className="flex items-center space-x-2">
@@ -335,14 +481,14 @@ const SettingsPage = () => {
       
       <Separator className="my-8" />
       
-      <Card className="border-destructive/20">
-        <CardHeader>
+      <Card className="border-destructive/20 trendy-card">
+        <CardHeader className="bg-destructive/10">
           <CardTitle className="text-destructive">Danger Zone</CardTitle>
           <CardDescription>
             Actions here can result in data loss. Proceed with caution.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>

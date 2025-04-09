@@ -8,20 +8,34 @@ import { cn } from "@/lib/utils";
 
 const Layout = () => {
   const location = useLocation();
+  
+  // Pages that should have full width layout (no sidebar)
+  const fullWidthPages = [
+    "/",
+    "/login",
+    "/signup",
+    "/about",
+    "/contact",
+    "/features",
+    "/privacy",
+    "/terms",
+  ];
+  
+  const isFullWidth = fullWidthPages.includes(location.pathname);
   const isHomepage = location.pathname === "/";
   
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <div className="flex flex-1">
-        {!isHomepage && (
+        {!isFullWidth && (
           <div className="w-64 hidden md:block">
             <Navigation />
           </div>
         )}
         <main className={cn(
           "flex-1",
-          isHomepage ? "" : "p-6"
+          isHomepage ? "" : isFullWidth ? "" : "p-6"
         )}>
           <Outlet />
         </main>
