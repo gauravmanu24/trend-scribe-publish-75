@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +25,7 @@ const SettingsPage = () => {
   // Local form state
   const [apiKey, setApiKey] = React.useState(openRouterConfig.apiKey);
   const [model, setModel] = React.useState(openRouterConfig.model);
+  const [modelType, setModelType] = React.useState("paid");
   const [wpUrl, setWpUrl] = React.useState(wordPressConfig.url);
   const [wpUsername, setWpUsername] = React.useState(wordPressConfig.username);
   const [wpPassword, setWpPassword] = React.useState(wordPressConfig.password);
@@ -42,7 +42,7 @@ const SettingsPage = () => {
     setTimeout(() => {
       updateOpenRouterConfig({
         apiKey,
-        model,
+        model: modelType === "free" ? openRouterConfig.freeModel : model,
       });
       
       toast({
@@ -126,6 +126,7 @@ const SettingsPage = () => {
       // Reset local state
       setApiKey("");
       setModel("anthropic/claude-3-opus:beta");
+      setModelType("paid");
       setWpUrl("");
       setWpUsername("");
       setWpPassword("");
@@ -173,26 +174,49 @@ const SettingsPage = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="model">AI Model</Label>
-            <Select value={model} onValueChange={setModel}>
+            <Label htmlFor="modelType">AI Model Type</Label>
+            <Select value={modelType} onValueChange={setModelType}>
               <SelectTrigger>
-                <SelectValue placeholder="Select AI model" />
+                <SelectValue placeholder="Select model type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="anthropic/claude-3-opus:beta">Claude 3 Opus</SelectItem>
-                <SelectItem value="anthropic/claude-3-sonnet:beta">Claude 3 Sonnet</SelectItem>
-                <SelectItem value="anthropic/claude-3-haiku:beta">Claude 3 Haiku</SelectItem>
-                <SelectItem value="google/gemini-pro">Google Gemini Pro</SelectItem>
-                <SelectItem value="openai/gpt-4o">GPT-4o</SelectItem>
-                <SelectItem value="meta-llama/llama-3-70b-instruct">Llama 3 70B</SelectItem>
+                <SelectItem value="paid">Paid Models (Higher quality)</SelectItem>
+                <SelectItem value="free">Free Models (Limited features)</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Choose free models to save on API usage costs or paid models for higher quality content.
+            </p>
           </div>
+          
+          {modelType === "paid" && (
+            <div className="space-y-2">
+              <Label htmlFor="model">AI Model</Label>
+              <Select value={model} onValueChange={setModel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select AI model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="anthropic/claude-3-opus:beta">Claude 3 Opus</SelectItem>
+                  <SelectItem value="anthropic/claude-3-sonnet:beta">Claude 3 Sonnet</SelectItem>
+                  <SelectItem value="anthropic/claude-3-haiku:beta">Claude 3 Haiku</SelectItem>
+                  <SelectItem value="google/gemini-pro">Google Gemini Pro</SelectItem>
+                  <SelectItem value="openai/gpt-4o">GPT-4o</SelectItem>
+                  <SelectItem value="meta-llama/llama-3-70b-instruct">Llama 3 70B</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {modelType === "paid" 
+                  ? "Select the AI model that best fits your needs and budget." 
+                  : "Using free model: Llama 3.1 8B (limited capabilities)"}
+              </p>
+            </div>
+          )}
         </CardContent>
         <CardFooter>
           <Button 
             onClick={handleSaveOpenRouter} 
-            disabled={savingOpenRouter || !apiKey}
+            disabled={savingOpenRouter || (!apiKey && modelType === "paid")}
           >
             {savingOpenRouter ? (
               <>

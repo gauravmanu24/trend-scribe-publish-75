@@ -11,6 +11,11 @@ import ArticlesPage from "./pages/ArticlesPage";
 import AIWriterPage from "./pages/AIWriterPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
+import AboutUsPage from "./pages/AboutUsPage";
+import ContactUsPage from "./pages/ContactUsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsPage from "./pages/TermsPage";
 
 const queryClient = new QueryClient();
 
@@ -22,11 +27,16 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
+            <Route index element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/feeds" element={<FeedsPage />} />
             <Route path="/articles" element={<ArticlesPage />} />
             <Route path="/ai-writer" element={<AIWriterPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/about" element={<AboutUsPage />} />
+            <Route path="/contact" element={<ContactUsPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
