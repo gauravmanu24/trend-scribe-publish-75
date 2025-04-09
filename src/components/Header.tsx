@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Newspaper, User, ChevronDown, LogIn, UserPlus, Menu, Settings, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
+import { toast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,13 +60,11 @@ const Header = () => {
     setUserProfile(null);
     navigate('/');
     
-    // Show success message via toast (if available)
-    if (window.showToast) {
-      window.showToast({
-        title: 'Logged out successfully',
-        description: 'You have been logged out of your account.'
-      });
-    }
+    // Show success message via toast (using the imported toast function)
+    toast({
+      title: 'Logged out successfully',
+      description: 'You have been logged out of your account.'
+    });
   };
   
   const handleNavigation = (path: string) => {
