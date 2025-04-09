@@ -1,6 +1,6 @@
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, PersistOptions } from "zustand/middleware";
 import { AppState, Feed, Article } from "../types";
 import { v4 as uuidv4 } from "uuid";
 
@@ -21,21 +21,25 @@ const initialState: AppState = {
   pollingInterval: 60,
 };
 
-export const useAppStore = create<
-  AppState & {
-    addFeed: (feed: Omit<Feed, "id" | "status" | "lastFetched">) => void;
-    updateFeed: (id: string, feed: Partial<Feed>) => void;
-    removeFeed: (id: string) => void;
-    updateWordPressConfig: (config: Partial<AppState["wordPressConfig"]>) => void;
-    updateOpenRouterConfig: (config: Partial<AppState["openRouterConfig"]>) => void;
-    addArticle: (article: Omit<Article, "id" | "createdAt">) => void;
-    updateArticle: (id: string, article: Partial<Article>) => void;
-    removeArticle: (id: string) => void;
-    setPolling: (isPolling: boolean) => void;
-    setPollingInterval: (minutes: number) => void;
-    reset: () => void;
-  }
->(
+type StoreState = AppState & {
+  addFeed: (feed: Omit<Feed, "id" | "status" | "lastFetched">) => void;
+  updateFeed: (id: string, feed: Partial<Feed>) => void;
+  removeFeed: (id: string) => void;
+  updateWordPressConfig: (config: Partial<AppState["wordPressConfig"]>) => void;
+  updateOpenRouterConfig: (config: Partial<AppState["openRouterConfig"]>) => void;
+  addArticle: (article: Omit<Article, "id" | "createdAt">) => void;
+  updateArticle: (id: string, article: Partial<Article>) => void;
+  removeArticle: (id: string) => void;
+  setPolling: (isPolling: boolean) => void;
+  setPollingInterval: (minutes: number) => void;
+  reset: () => void;
+};
+
+const persistConfig: PersistOptions<StoreState> = {
+  name: "news-publisher-storage",
+};
+
+export const useAppStore = create<StoreState>()(
   persist(
     (set) => ({
       ...initialState,
@@ -96,8 +100,6 @@ export const useAppStore = create<
         })),
       reset: () => set(initialState),
     }),
-    {
-      name: "news-publisher-storage",
-    }
+    persistConfig
   )
 );

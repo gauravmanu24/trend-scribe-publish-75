@@ -62,7 +62,12 @@ const AddFeedDialog: React.FC<AddFeedDialogProps> = ({ editFeed, onComplete }) =
           description: `Feed "${data.name}" has been updated.`,
         });
       } else {
-        addFeed(data);
+        // Ensure all required fields are passed to addFeed
+        addFeed({
+          name: data.name,
+          url: data.url,
+          category: data.category,
+        });
         toast({
           title: "Feed added",
           description: `Feed "${data.name}" has been added.`,
