@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { Newspaper, User, ChevronDown, LogIn, UserPlus, Menu } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Newspaper, User, ChevronDown, LogIn, UserPlus, Menu, Settings, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
@@ -22,7 +22,8 @@ const Header = () => {
   const navigate = useNavigate();
   const isPolling = useAppStore((state) => state.isPolling);
   const setPolling = useAppStore((state) => state.setPolling);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Replace with actual auth state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ name?: string; email?: string } | null>(null);
   
   const menuItems = [
     { label: "Home", href: "/" },
@@ -30,6 +31,43 @@ const Header = () => {
     { label: "About Us", href: "/about" },
     { label: "Contact Us", href: "/contact" },
   ];
+  
+  // Simulate checking for user authentication on component mount
+  useEffect(() => {
+    // This would be replaced with actual authentication check
+    const checkAuthState = () => {
+      const savedAuth = localStorage.getItem('auth');
+      if (savedAuth) {
+        try {
+          const authData = JSON.parse(savedAuth);
+          if (authData.isLoggedIn) {
+            setIsLoggedIn(true);
+            setUserProfile(authData.profile || { name: 'User', email: 'user@example.com' });
+          }
+        } catch (e) {
+          console.error('Error parsing auth data:', e);
+          localStorage.removeItem('auth');
+        }
+      }
+    };
+    
+    checkAuthState();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth');
+    setIsLoggedIn(false);
+    setUserProfile(null);
+    navigate('/');
+    
+    // Show success message via toast (if available)
+    if (window.showToast) {
+      window.showToast({
+        title: 'Logged out successfully',
+        description: 'You have been logged out of your account.'
+      });
+    }
+  };
   
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -82,7 +120,7 @@ const Header = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center">
                     <User className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Account</span>
+                    <span className="hidden sm:inline">{userProfile?.name || "Account"}</span>
                     <ChevronDown className="h-4 w-4 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -91,10 +129,12 @@ const Header = () => {
                     Dashboard
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/settings")}>
+                    <Settings className="h-4 w-4 mr-2" />
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setIsLoggedIn(false)}>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -162,11 +202,13 @@ const Header = () => {
                       </SheetClose>
                       <SheetClose asChild>
                         <Button variant="ghost" className="justify-start" onClick={() => navigate("/settings")}>
+                          <Settings className="h-4 w-4 mr-2" />
                           Settings
                         </Button>
                       </SheetClose>
                       <SheetClose asChild>
-                        <Button variant="ghost" className="justify-start text-destructive" onClick={() => setIsLoggedIn(false)}>
+                        <Button variant="ghost" className="justify-start text-destructive" onClick={handleLogout}>
+                          <LogOut className="h-4 w-4 mr-2" />
                           Logout
                         </Button>
                       </SheetClose>

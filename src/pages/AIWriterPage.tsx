@@ -1,12 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, Loader2, Send } from "lucide-react";
+import { AlertCircle, Loader2, Send, PlusCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -16,10 +15,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Article } from "@/types";
 import AIWriterOptions from "@/components/AIWriterOptions";
+import ContentTools from "@/components/ContentTools";
+import ImageGenerator from "@/components/ImageGenerator";
+import RichTextEditor from "@/components/RichTextEditor";
 
 // Free models from OpenRouter
 const freeAiModels = [
   { value: "google/gemini-2.0-flash-thinking-exp:free", label: "Gemini 2.0 Flash Thinking" },
+  { value: "google/gemini-2.0-flash-thinking-exp-1219:free", label: "Gemini 2.0 Flash Thinking 1219" },
   { value: "nvidia/llama-3.1-nemotron-ultra-253b-v1:free", label: "Nemotron Ultra 253B" },
   { value: "nvidia/llama-3.3-nemotron-super-49b-v1:free", label: "Nemotron Super 49B" },
   { value: "moonshotai/moonlight-16b-a3b-instruct:free", label: "Moonlight 16B" },
@@ -34,11 +37,70 @@ const freeAiModels = [
   { value: "deepseek/deepseek-r1-distill-llama-70b:free", label: "DeepSeek R1 LLaMA 70B" },
   { value: "qwen/qwen2.5-vl-32b-instruct:free", label: "Qwen 2.5 VL 32B" },
   { value: "qwen/qwen2.5-vl-72b-instruct:free", label: "Qwen 2.5 VL 72B" },
+  { value: "deepseek/deepseek-r1-distill-qwen-32b:free", label: "DeepSeek R1 Qwen 32B" },
+  { value: "deepseek/deepseek-r1-distill-qwen-14b:free", label: "DeepSeek R1 Qwen 14B" },
+  { value: "qwen/qwen2.5-vl-3b-instruct:free", label: "Qwen 2.5 VL 3B" },
   { value: "meta-llama/llama-3.3-70b-instruct:free", label: "LLaMA 3.3 70B" },
+  { value: "qwen/qwen-2.5-vl-7b-instruct:free", label: "Qwen 2.5 VL 7B" },
   { value: "mistralai/mistral-7b-instruct:free", label: "Mistral 7B" },
   { value: "meta-llama/llama-3.2-3b-instruct:free", label: "LLaMA 3.2 3B" },
+  { value: "meta-llama/llama-3.2-1b-instruct:free", label: "LLaMA 3.2 1B" },
   { value: "meta-llama/llama-3.1-8b-instruct:free", label: "LLaMA 3.1 8B" },
-  { value: "qwen/qwen-2.5-7b-instruct:free", label: "Qwen 2.5 7B" }
+  { value: "deepseek/deepseek-v3-base:free", label: "DeepSeek V3 Base" },
+  { value: "deepseek/deepseek-chat-v3-0324:free", label: "DeepSeek Chat V3" },
+  { value: "deepseek/deepseek-r1-zero:free", label: "DeepSeek R1 Zero" },
+  { value: "qwen/qwen-2.5-coder-32b-instruct:free", label: "Qwen 2.5 Coder 32B" },
+  { value: "mistralai/mistral-small-24b-instruct-2501:free", label: "Mistral Small 24B 2501" },
+  { value: "bytedance-research/ui-tars-72b:free", label: "TARS 72B" },
+  { value: "huggingfaceh4/zephyr-7b-beta:free", label: "Zephyr 7B Beta" },
+  { value: "meta-llama/llama-4-maverick:free", label: "LLaMA 4 Maverick" },
+  { value: "deepseek/deepseek-chat:free", label: "DeepSeek Chat" },
+  { value: "qwen/qwq-32b-preview:free", label: "QWQ 32B Preview" },
+  { value: "sophosympatheia/rogue-rose-103b-v0.2:free", label: "Rogue Rose 103B" },
+  { value: "meta-llama/llama-4-scout:free", label: "LLaMA 4 Scout" },
+  { value: "allenai/molmo-7b-d:free", label: "MOLMO 7B" },
+  { value: "google/gemma-3-27b-it:free", label: "Gemma 3 27B" },
+  { value: "qwen/qwen-2.5-7b-instruct:free", label: "Qwen 2.5 7B" },
+  { value: "google/gemma-3-1b-it:free", label: "Gemma 3 1B" },
+  { value: "google/gemma-2-9b-it:free", label: "Gemma 2 9B" }
+];
+
+// Define custom integration models for other providers
+const apiIntegrations = [
+  {
+    name: "OpenAI",
+    models: [
+      { value: "openai/gpt-4o", label: "GPT-4o" },
+      { value: "openai/gpt-4-turbo", label: "GPT-4 Turbo" },
+      { value: "openai/gpt-3.5-turbo", label: "GPT-3.5 Turbo" }
+    ],
+    configKey: "openAiApiKey"
+  },
+  {
+    name: "Groq",
+    models: [
+      { value: "groq/llama-3-70b-8192", label: "LLaMA-3 70B" },
+      { value: "groq/gemma-7b-it", label: "Gemma 7B" }
+    ],
+    configKey: "groqApiKey"
+  },
+  {
+    name: "Anthropic",
+    models: [
+      { value: "anthropic/claude-3-opus", label: "Claude 3 Opus" },
+      { value: "anthropic/claude-3-sonnet", label: "Claude 3 Sonnet" },
+      { value: "anthropic/claude-3-haiku", label: "Claude 3 Haiku" }
+    ],
+    configKey: "anthropicApiKey"
+  },
+  {
+    name: "DeepInfra",
+    models: [
+      { value: "deepinfra/llama-3-70b", label: "LLaMA-3 70B" },
+      { value: "deepinfra/mistral-7b", label: "Mistral 7B" }
+    ],
+    configKey: "deepInfraApiKey"
+  }
 ];
 
 const AIWriterPage = () => {
@@ -48,19 +110,23 @@ const AIWriterPage = () => {
   const updateOpenRouterConfig = useAppStore((state) => state.updateOpenRouterConfig);
   const addArticle = useAppStore((state) => state.addArticle);
   const wordPressConfig = useAppStore((state) => state.wordPressConfig);
-  const [loading, setLoading] = React.useState(false);
-  const [title, setTitle] = React.useState("");
-  const [topic, setTopic] = React.useState("");
-  const [generatedContent, setGeneratedContent] = React.useState("");
-  const [modelType, setModelType] = React.useState("predefined"); // "predefined", "free", or "custom"
-  const [customModel, setCustomModel] = React.useState("");
-  const [autoPublish, setAutoPublish] = React.useState(true);
+  const [loading, setLoading] = useState(false);
+  const [title, setTitle] = useState("");
+  const [topic, setTopic] = useState("");
+  const [generatedContent, setGeneratedContent] = useState("");
+  const [modelType, setModelType] = useState("predefined"); // "predefined", "free", "custom", or "external"
+  const [customModel, setCustomModel] = useState("");
+  const [autoPublish, setAutoPublish] = useState(true);
+  const [apiProvider, setApiProvider] = useState("openai");
+  const [selectedApi, setSelectedApi] = useState(apiIntegrations[0]);
+  const [selectedApiModel, setSelectedApiModel] = useState("");
+  const [showImageGenerator, setShowImageGenerator] = useState(false);
   
   // New options
-  const [tone, setTone] = React.useState("professional");
-  const [language, setLanguage] = React.useState("en");
-  const [wordCount, setWordCount] = React.useState(1000);
-  const [outputFormat, setOutputFormat] = React.useState("html");
+  const [tone, setTone] = useState("professional");
+  const [language, setLanguage] = useState("en");
+  const [wordCount, setWordCount] = useState(1000);
+  const [outputFormat, setOutputFormat] = useState("html");
   
   const handleGenerate = async () => {
     if (!title || !topic) {
@@ -72,7 +138,7 @@ const AIWriterPage = () => {
       return;
     }
     
-    if (!openRouterConfig.apiKey) {
+    if (modelType !== "external" && !openRouterConfig.apiKey) {
       toast({
         title: "API key missing",
         description: "Please configure your OpenRouter API key in settings.",
@@ -90,6 +156,9 @@ const AIWriterPage = () => {
         modelToUse = openRouterConfig.freeModel || freeAiModels[0].value;
       } else if (modelType === "custom") {
         modelToUse = customModel;
+      } else if (modelType === "external") {
+        // In a real app, this would be handled differently based on the API provider
+        modelToUse = selectedApiModel;
       }
       
       // Language mapping for system prompt
@@ -117,12 +186,25 @@ const AIWriterPage = () => {
         "Make it informative, factual, and engaging for readers with clear sections."
       }`;
       
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      // Simulate API call (in a real app, you would choose the correct endpoint based on modelType)
+      let apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
+      let apiKey = openRouterConfig.apiKey;
+      let apiHeaders = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      };
+      
+      // In a real app, this would select different API endpoints and handle different auth methods
+      if (modelType === "external") {
+        // Simulate different API providers
+        // This is just for demonstration - in a real app, you would implement actual API calls
+        console.log(`Using external API provider: ${apiProvider}, model: ${selectedApiModel}`);
+        // We're still using OpenRouter in this demo
+      }
+      
+      const response = await fetch(apiEndpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${openRouterConfig.apiKey}`,
-        },
+        headers: apiHeaders,
         body: JSON.stringify({
           model: modelToUse,
           messages: [
@@ -287,11 +369,24 @@ const AIWriterPage = () => {
     }
   };
 
+  const handleApiProviderChange = (value: string) => {
+    setApiProvider(value);
+    const newSelectedApi = apiIntegrations.find(api => api.name.toLowerCase() === value.toLowerCase()) || apiIntegrations[0];
+    setSelectedApi(newSelectedApi);
+    setSelectedApiModel(newSelectedApi.models[0].value);
+  };
+
+  const handleAddImage = (imageUrl: string) => {
+    const imgTag = `<img src="${imageUrl}" alt="Article image" class="my-4 rounded-md max-w-full" />`;
+    setGeneratedContent(prevContent => prevContent + '\n' + imgTag);
+    setShowImageGenerator(false);
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">AI Writer</h1>
       
-      {!openRouterConfig.apiKey && (
+      {!openRouterConfig.apiKey && modelType !== "external" && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -321,10 +416,9 @@ const AIWriterPage = () => {
             
             <div className="space-y-2">
               <Label htmlFor="topic">Topic or Keywords</Label>
-              <Textarea 
+              <Input
                 id="topic"
                 placeholder="Enter topic, keywords, or brief description"
-                className="min-h-[100px]"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
               />
@@ -342,20 +436,21 @@ const AIWriterPage = () => {
             />
             
             <div className="space-y-4 pt-4">
-              <Label>AI Model Type</Label>
+              <Label>AI Provider & Model</Label>
               <Tabs 
                 value={modelType} 
                 onValueChange={setModelType}
                 className="w-full"
               >
-                <TabsList className="grid grid-cols-3 w-full">
+                <TabsList className="grid grid-cols-4 w-full">
                   <TabsTrigger value="predefined">Predefined</TabsTrigger>
                   <TabsTrigger value="free">Free Models</TabsTrigger>
                   <TabsTrigger value="custom">Custom</TabsTrigger>
+                  <TabsTrigger value="external">External APIs</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="predefined" className="space-y-2 mt-4">
-                  <Label htmlFor="model">AI Model</Label>
+                  <Label htmlFor="model">OpenRouter Model</Label>
                   <Select 
                     value={openRouterConfig.model} 
                     onValueChange={(value) => updateOpenRouterConfig({ model: value })}
@@ -407,6 +502,58 @@ const AIWriterPage = () => {
                     Enter the full model ID from OpenRouter
                   </p>
                 </TabsContent>
+
+                <TabsContent value="external" className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="api-provider">API Provider</Label>
+                    <Select 
+                      value={apiProvider} 
+                      onValueChange={handleApiProviderChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select API provider" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {apiIntegrations.map((api) => (
+                          <SelectItem key={api.name} value={api.name.toLowerCase()}>
+                            {api.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="api-model">Model</Label>
+                    <Select 
+                      value={selectedApiModel} 
+                      onValueChange={setSelectedApiModel}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedApi.models.map((model) => (
+                          <SelectItem key={model.value} value={model.value}>
+                            {model.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="api-key">API Key</Label>
+                    <Input 
+                      id="api-key"
+                      type="password"
+                      placeholder={`Enter your ${selectedApi.name} API key`}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This key is only used for this session and not stored permanently.
+                    </p>
+                  </div>
+                </TabsContent>
               </Tabs>
             </div>
 
@@ -423,9 +570,9 @@ const AIWriterPage = () => {
           </CardContent>
           <CardFooter>
             <Button 
-              className="w-full"
+              className="w-full btn-gradient-primary"
               onClick={handleGenerate}
-              disabled={loading || !title || !topic || !openRouterConfig.apiKey}
+              disabled={loading || !title || !topic || (modelType !== "external" && !openRouterConfig.apiKey)}
             >
               {loading ? (
                 <>
@@ -439,47 +586,67 @@ const AIWriterPage = () => {
           </CardFooter>
         </Card>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Generated Content</CardTitle>
-            <CardDescription>
-              AI-generated content based on your inputs
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Textarea 
-              className="min-h-[300px] font-serif"
-              placeholder="Generated content will appear here..."
-              value={generatedContent}
-              onChange={(e) => setGeneratedContent(e.target.value)}
-            />
-          </CardContent>
-          <CardFooter className="flex justify-between">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generated Content</CardTitle>
+              <CardDescription>
+                AI-generated content based on your inputs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RichTextEditor 
+                value={generatedContent} 
+                onChange={setGeneratedContent}
+                onImageRequest={() => setShowImageGenerator(true)} 
+              />
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => setGeneratedContent("")}
+                disabled={!generatedContent || loading}
+              >
+                Clear
+              </Button>
+              <Button 
+                onClick={handleSave}
+                disabled={!generatedContent || loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {autoPublish && wordPressConfig.isConnected ? "Publishing..." : "Saving..."}
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    {autoPublish && wordPressConfig.isConnected ? "Save & Publish" : "Save Article"}
+                  </>
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {generatedContent && (
+            <ContentTools content={generatedContent} />
+          )}
+
+          {showImageGenerator && (
+            <ImageGenerator onImageSelect={handleAddImage} />
+          )}
+
+          {!showImageGenerator && generatedContent && (
             <Button 
               variant="outline" 
-              onClick={() => setGeneratedContent("")}
-              disabled={!generatedContent || loading}
+              onClick={() => setShowImageGenerator(true)}
+              className="w-full"
             >
-              Clear
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Image
             </Button>
-            <Button 
-              onClick={handleSave}
-              disabled={!generatedContent || loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {autoPublish ? "Publishing..." : "Saving..."}
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  {autoPublish && wordPressConfig.isConnected ? "Save & Publish" : "Save Article"}
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
+          )}
+        </div>
       </div>
     </div>
   );
