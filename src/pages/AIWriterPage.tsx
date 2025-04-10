@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
@@ -334,14 +333,21 @@ const AIWriterPage = () => {
     }
     
     try {
-      let wordpressPostId, wordpressPostUrl;
+      let wordpressPostId = null;
+      let wordpressPostUrl = null;
+      const now = new Date().toISOString();
       
       const article = {
         title,
         content: generatedContent,
-        feedId: "manual",
         sourceTitle: "Manual Entry",
+        sourceLink: null,
         status: "generated" as Article["status"],
+        category: "general", // Add default category
+        createdAt: now, // Add creation date
+        publishedAt: null, // Initialize as null, will be updated if published
+        wordpressPostId, // Initialize as null
+        wordpressPostUrl // Initialize as null
       };
       
       if (autoPublish && wordPressConfig.isConnected) {
@@ -357,7 +363,7 @@ const AIWriterPage = () => {
               status: "published" as Article["status"],
               wordpressPostId,
               wordpressPostUrl,
-              publishedAt: new Date().toISOString(),
+              publishedAt: now,
             });
           } else {
             addArticle(article);
