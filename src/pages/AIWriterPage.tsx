@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -368,11 +368,11 @@ const AIWriterPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">AI Writer</h1>
+    <div className="max-w-7xl mx-auto">
+      <h1 className="text-4xl font-bold text-center text-green-600 mb-6">AI Writer</h1>
       
       {!openRouterConfig.apiKey && modelType !== "external" && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             OpenRouter API key not configured. Please add it in the settings.
@@ -380,38 +380,31 @@ const AIWriterPage = () => {
         </Alert>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        <div className="md:col-span-3">
-          <ContentTools content={generatedContent} />
-        </div>
-        
-        <div className="md:col-span-9">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Article Details</CardTitle>
-                <CardDescription>
-                  Enter details for your AI-generated article
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+      <div className="bg-gray-100 bg-opacity-50 rounded-lg p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <h2 className="text-2xl font-semibold text-green-600 mb-4">Article Details</h2>
+            <div className="bg-dark-green rounded-md p-6 h-[480px] overflow-y-auto">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Article Title</Label>
+                  <Label htmlFor="title" className="text-white">Article Title</Label>
                   <Input 
                     id="title"
                     placeholder="Enter article title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    className="bg-white/10 border-green-700 text-white"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="topic">Topic or Keywords</Label>
+                  <Label htmlFor="topic" className="text-white">Topic or Keywords</Label>
                   <Input
                     id="topic"
                     placeholder="Enter topic, keywords, or brief description"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
+                    className="bg-white/10 border-green-700 text-white"
                   />
                 </div>
                 
@@ -427,26 +420,26 @@ const AIWriterPage = () => {
                 />
                 
                 <div className="space-y-4 pt-4">
-                  <Label>AI Provider & Model</Label>
+                  <Label className="text-white">AI Provider & Model</Label>
                   <Tabs 
                     value={modelType} 
                     onValueChange={setModelType}
                     className="w-full"
                   >
-                    <TabsList className="grid grid-cols-4 w-full">
-                      <TabsTrigger value="predefined">Predefined</TabsTrigger>
-                      <TabsTrigger value="free">Free Models</TabsTrigger>
-                      <TabsTrigger value="custom">Custom</TabsTrigger>
-                      <TabsTrigger value="external">External APIs</TabsTrigger>
+                    <TabsList className="grid grid-cols-4 w-full bg-green-900">
+                      <TabsTrigger value="predefined" className="data-[state=active]:bg-green-700">Predefined</TabsTrigger>
+                      <TabsTrigger value="free" className="data-[state=active]:bg-green-700">Free Models</TabsTrigger>
+                      <TabsTrigger value="custom" className="data-[state=active]:bg-green-700">Custom</TabsTrigger>
+                      <TabsTrigger value="external" className="data-[state=active]:bg-green-700">External APIs</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="predefined" className="space-y-2 mt-4">
-                      <Label htmlFor="model">OpenRouter Model</Label>
+                      <Label htmlFor="model" className="text-white">OpenRouter Model</Label>
                       <Select 
                         value={openRouterConfig.model} 
                         onValueChange={(value) => updateOpenRouterConfig({ model: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-white/10 border-green-700 text-white">
                           <SelectValue placeholder="Select AI model" />
                         </SelectTrigger>
                         <SelectContent>
@@ -554,15 +547,16 @@ const AIWriterPage = () => {
                       id="auto-publish" 
                       checked={autoPublish} 
                       onCheckedChange={(checked) => setAutoPublish(checked === true)}
+                      className="border-white data-[state=checked]:bg-green-600"
                     />
-                    <Label htmlFor="auto-publish">Auto-publish to WordPress when saving</Label>
+                    <Label htmlFor="auto-publish" className="text-white">Auto-publish to WordPress when saving</Label>
                   </div>
                 )}
                 
                 <div className="pt-4">
                   <Button 
                     variant="outline"
-                    className="w-full mb-4" 
+                    className="w-full mb-4 border-green-500 text-white hover:bg-green-700 hover:text-white" 
                     onClick={() => setShowAiImageGenerator(true)}
                     disabled={loading}
                   >
@@ -571,7 +565,7 @@ const AIWriterPage = () => {
                   </Button>
                   
                   <Button 
-                    className="w-full btn-gradient-primary"
+                    className="w-full bg-green-600 hover:bg-green-700"
                     onClick={handleGenerate}
                     disabled={loading || !title || !topic || (modelType !== "external" && !openRouterConfig.apiKey)}
                   >
@@ -585,34 +579,34 @@ const AIWriterPage = () => {
                     )}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Generated Content</CardTitle>
-                <CardDescription>
-                  AI-generated content based on your inputs
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h2 className="text-2xl font-semibold text-green-600 mb-4">Generated Content</h2>
+            <div className="bg-dark-green rounded-md p-6 h-[480px] flex flex-col">
+              <div className="flex-grow overflow-auto mb-4">
                 <RichTextEditor 
                   value={generatedContent} 
                   onChange={setGeneratedContent}
                   onImageRequest={() => setShowImageGenerator(true)} 
+                  className="text-white bg-transparent min-h-full"
                 />
-              </CardContent>
-              <CardFooter className="flex justify-between">
+              </div>
+              <div className="flex justify-between">
                 <Button 
                   variant="outline" 
                   onClick={() => setGeneratedContent("")}
                   disabled={!generatedContent || loading}
+                  className="border-green-500 text-white hover:bg-green-700 hover:text-white"
                 >
                   Clear
                 </Button>
                 <Button 
                   onClick={handleSave}
                   disabled={!generatedContent || loading}
+                  className="bg-green-600 hover:bg-green-700"
                 >
                   {loading ? (
                     <>
@@ -626,33 +620,41 @@ const AIWriterPage = () => {
                     </>
                   )}
                 </Button>
-              </CardFooter>
-            </Card>
+              </div>
+            </div>
           </div>
-
-          {showAiImageGenerator && (
-            <div className="mt-6">
-              <ImageGenerator onImageSelect={handleAddImage} />
-            </div>
-          )}
-
-          {showImageGenerator && !showAiImageGenerator && (
-            <div className="mt-6">
-              <ImageGenerator onImageSelect={handleAddImage} />
-            </div>
-          )}
-
-          {!showImageGenerator && !showAiImageGenerator && generatedContent && (
-            <Button 
-              variant="outline" 
-              onClick={() => setShowImageGenerator(true)}
-              className="w-full mt-6"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Image
-            </Button>
-          )}
         </div>
+        
+        <div>
+          <h2 className="text-2xl font-semibold text-green-600 text-center mb-2">Content Tools</h2>
+          <p className="text-center text-green-600 mb-4">Analyze and improve your content with these tools</p>
+          <div className="bg-dark-green rounded-md p-6 h-[350px] overflow-auto">
+            <ContentTools content={generatedContent} />
+          </div>
+        </div>
+
+        {showAiImageGenerator && (
+          <div className="mt-6">
+            <ImageGenerator onImageSelect={handleAddImage} />
+          </div>
+        )}
+
+        {showImageGenerator && !showAiImageGenerator && (
+          <div className="mt-6">
+            <ImageGenerator onImageSelect={handleAddImage} />
+          </div>
+        )}
+
+        {!showImageGenerator && !showAiImageGenerator && generatedContent && (
+          <Button 
+            variant="outline" 
+            onClick={() => setShowImageGenerator(true)}
+            className="w-full mt-6 border-green-500 text-green-600 hover:bg-green-700 hover:text-white"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Image
+          </Button>
+        )}
       </div>
     </div>
   );

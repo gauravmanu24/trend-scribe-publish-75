@@ -1,7 +1,5 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -290,327 +288,319 @@ const ContentTools: React.FC<ContentToolsProps> = ({ content }) => {
   };
 
   return (
-    <Card className="w-full h-[700px] overflow-auto sticky top-4">
-      <CardHeader>
-        <CardTitle>Content Tools</CardTitle>
-        <CardDescription>
-          Analyze and improve your content with these tools
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 mb-4">
-            <TabsTrigger value="ai-detection">AI Detection</TabsTrigger>
-            <TabsTrigger value="plagiarism">Plagiarism</TabsTrigger>
-            <TabsTrigger value="content-spinner">Content Spinner</TabsTrigger>
-            <TabsTrigger value="seo-analyzer">SEO Analyzer</TabsTrigger>
-            <TabsTrigger value="nlp-analyzer">NLP Analyzer</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="ai-detection">
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Check if your content appears to be AI-generated. Lower scores suggest more human-like content.
-              </p>
-              
-              {results.aiScore !== undefined ? (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label>AI Detection Score</Label>
-                    <span className={`font-bold ${results.aiScore > 15 ? 'text-amber-500' : 'text-green-500'}`}>
-                      {results.aiScore}%
-                    </span>
-                  </div>
-                  <Progress value={results.aiScore} className="h-2" />
-                  <div className="flex items-start mt-4 bg-muted p-3 rounded-md">
-                    {results.aiScore > 15 ? (
-                      <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    )}
-                    <div>
-                      <p className="font-medium">
-                        {results.aiScore > 15 
-                          ? "Moderate AI signals detected" 
-                          : "Low AI signals detected"}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {results.aiScore > 15 
-                          ? "Your content shows some characteristics of AI generation. Consider revising to make it more human-like." 
-                          : "Your content appears mostly human-like. Great job!"}
-                      </p>
-                    </div>
+    <div className="w-full text-white">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-5 mb-4 bg-green-900 w-full">
+          <TabsTrigger value="ai-detection" className="data-[state=active]:bg-green-700 text-white">AI Detection</TabsTrigger>
+          <TabsTrigger value="plagiarism" className="data-[state=active]:bg-green-700 text-white">Plagiarism</TabsTrigger>
+          <TabsTrigger value="content-spinner" className="data-[state=active]:bg-green-700 text-white">Content Spinner</TabsTrigger>
+          <TabsTrigger value="seo-analyzer" className="data-[state=active]:bg-green-700 text-white">SEO Analyzer</TabsTrigger>
+          <TabsTrigger value="nlp-analyzer" className="data-[state=active]:bg-green-700 text-white">NLP Analyzer</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="ai-detection">
+          <div className="space-y-4">
+            <p className="text-sm text-gray-300">
+              Check if your content appears to be AI-generated. Lower scores suggest more human-like content.
+            </p>
+            
+            {results.aiScore !== undefined ? (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-white">AI Detection Score</Label>
+                  <span className={`font-bold ${results.aiScore > 15 ? 'text-amber-300' : 'text-green-300'}`}>
+                    {results.aiScore}%
+                  </span>
+                </div>
+                <Progress value={results.aiScore} className="h-2" />
+                <div className="flex items-start mt-4 bg-green-900/30 p-3 rounded-md">
+                  {results.aiScore > 15 ? (
+                    <AlertCircle className="h-5 w-5 text-amber-300 mr-2 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <CheckCircle className="h-5 w-5 text-green-300 mr-2 mt-0.5 flex-shrink-0" />
+                  )}
+                  <div>
+                    <p className="font-medium text-white">
+                      {results.aiScore > 15 
+                        ? "Moderate AI signals detected" 
+                        : "Low AI signals detected"}
+                    </p>
+                    <p className="text-sm text-gray-300">
+                      {results.aiScore > 15 
+                        ? "Your content shows some characteristics of AI generation. Consider revising to make it more human-like." 
+                        : "Your content appears mostly human-like. Great job!"}
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <Button 
-                  onClick={handleAIDetection} 
-                  disabled={isProcessing}
-                  className="w-full"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Analyzing...
-                    </>
+              </div>
+            ) : (
+              <Button 
+                onClick={handleAIDetection} 
+                disabled={isProcessing}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Run AI Detection
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="plagiarism">
+          <div className="space-y-4">
+            <p className="text-sm text-gray-300">
+              Check if your content contains plagiarized material from across the web.
+            </p>
+            
+            {results.plagiarismScore !== undefined ? (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-white">Plagiarism Score</Label>
+                  <span className={`font-bold ${results.plagiarismScore > 5 ? 'text-red-300' : 'text-green-300'}`}>
+                    {results.plagiarismScore}%
+                  </span>
+                </div>
+                <Progress value={results.plagiarismScore} className="h-2" />
+                <div className="flex items-start mt-4 bg-green-900/30 p-3 rounded-md">
+                  {results.plagiarismScore > 5 ? (
+                    <AlertCircle className="h-5 w-5 text-red-300 mr-2 mt-0.5 flex-shrink-0" />
                   ) : (
-                    <>
-                      <Shield className="mr-2 h-4 w-4" />
-                      Run AI Detection
-                    </>
+                    <CheckCircle className="h-5 w-5 text-green-300 mr-2 mt-0.5 flex-shrink-0" />
                   )}
-                </Button>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="plagiarism">
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Check if your content contains plagiarized material from across the web.
-              </p>
-              
-              {results.plagiarismScore !== undefined ? (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label>Plagiarism Score</Label>
-                    <span className={`font-bold ${results.plagiarismScore > 5 ? 'text-red-500' : 'text-green-500'}`}>
-                      {results.plagiarismScore}%
-                    </span>
-                  </div>
-                  <Progress value={results.plagiarismScore} className="h-2" />
-                  <div className="flex items-start mt-4 bg-muted p-3 rounded-md">
-                    {results.plagiarismScore > 5 ? (
-                      <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    )}
-                    <div>
-                      <p className="font-medium">
-                        {results.plagiarismScore > 5 
-                          ? "Potential plagiarism detected" 
-                          : "Original content"}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {results.plagiarismScore > 5
-                          ? "Your content contains some sections that may be plagiarized. Consider revising these sections."
-                          : "Your content appears to be original. Great job!"}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="font-medium text-white">
+                      {results.plagiarismScore > 5 
+                        ? "Potential plagiarism detected" 
+                        : "Original content"}
+                    </p>
+                    <p className="text-sm text-gray-300">
+                      {results.plagiarismScore > 5
+                        ? "Your content contains some sections that may be plagiarized. Consider revising these sections."
+                        : "Your content appears to be original. Great job!"}
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <Button 
-                  onClick={handlePlagiarismCheck} 
-                  disabled={isProcessing}
-                  className="w-full"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Checking...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="mr-2 h-4 w-4" />
-                      Check for Plagiarism
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="content-spinner">
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Rewrite your content to create a unique version while preserving meaning.
-              </p>
-              
-              {results.spinnedContent ? (
-                <div className="space-y-4">
-                  <Label>Spun Content</Label>
-                  <Textarea 
-                    value={results.spinnedContent} 
-                    rows={8}
-                    className="font-serif"
-                  />
-                  <div className="flex justify-end">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(results.spinnedContent || "");
-                        toast({
-                          title: "Copied to clipboard",
-                          description: "The rewritten content has been copied to your clipboard.",
-                        });
-                      }}
-                    >
-                      Copy to clipboard
-                    </Button>
-                  </div>
+              </div>
+            ) : (
+              <Button 
+                onClick={handlePlagiarismCheck} 
+                disabled={isProcessing}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <Search className="mr-2 h-4 w-4" />
+                    Check for Plagiarism
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="content-spinner">
+          <div className="space-y-4">
+            <p className="text-sm text-gray-300">
+              Rewrite your content to create a unique version while preserving meaning.
+            </p>
+            
+            {results.spinnedContent ? (
+              <div className="space-y-4">
+                <Label>Spun Content</Label>
+                <Textarea 
+                  value={results.spinnedContent} 
+                  rows={8}
+                  className="font-serif"
+                />
+                <div className="flex justify-end">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(results.spinnedContent || "");
+                      toast({
+                        title: "Copied to clipboard",
+                        description: "The rewritten content has been copied to your clipboard.",
+                      });
+                    }}
+                  >
+                    Copy to clipboard
+                  </Button>
                 </div>
-              ) : (
-                <Button 
-                  onClick={handleContentSpin} 
-                  disabled={isProcessing}
-                  className="w-full"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Rewriting...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCcw className="mr-2 h-4 w-4" />
-                      Spin Content
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          </TabsContent>
+              </div>
+            ) : (
+              <Button 
+                onClick={handleContentSpin} 
+                disabled={isProcessing}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Rewriting...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    Spin Content
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </TabsContent>
 
-          <TabsContent value="seo-analyzer">
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Analyze your content for search engine optimization and discover improvement opportunities.
-              </p>
-              
-              {results.seoScore !== undefined ? (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Label>SEO Score</Label>
-                    <span className={`font-bold ${
-                      results.seoScore > 80 ? 'text-green-500' : 
-                      results.seoScore > 65 ? 'text-amber-500' : 
-                      'text-red-500'
-                    }`}>
-                      {results.seoScore}%
-                    </span>
+        <TabsContent value="seo-analyzer">
+          <div className="space-y-4">
+            <p className="text-sm text-gray-300">
+              Analyze your content for search engine optimization and discover improvement opportunities.
+            </p>
+            
+            {results.seoScore !== undefined ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <Label className="text-white">SEO Score</Label>
+                  <span className={`font-bold ${
+                    results.seoScore > 80 ? 'text-green-300' : 
+                    results.seoScore > 65 ? 'text-amber-300' : 
+                    'text-red-300'
+                  }`}>
+                    {results.seoScore}%
+                  </span>
+                </div>
+                <Progress value={results.seoScore} className="h-2" />
+                
+                <div className="mt-4">
+                  <Label className="mb-2 block">Recommendations</Label>
+                  <ul className="space-y-2 bg-green-900/30 p-3 rounded-md">
+                    {results.seoSuggestions?.map((suggestion, i) => (
+                      <li key={i} className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-amber-300 mr-2 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm">{suggestion}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <Button 
+                onClick={handleSEOAnalysis} 
+                disabled={isProcessing}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <BarChart2 className="mr-2 h-4 w-4" />
+                    Run SEO Analysis
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="nlp-analyzer">
+          <div className="space-y-4">
+            <p className="text-sm text-gray-300">
+              Use natural language processing to extract insights from your content.
+            </p>
+            
+            {results.nlpAnalysis ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="mb-2 block">Sentiment Analysis</Label>
+                    <div className="bg-green-900/30 p-3 rounded-md">
+                      <p className="text-sm font-medium">{results.nlpAnalysis.sentiment}</p>
+                    </div>
                   </div>
-                  <Progress value={results.seoScore} className="h-2" />
                   
-                  <div className="mt-4">
-                    <Label className="mb-2 block">Recommendations</Label>
-                    <ul className="space-y-2 bg-muted p-3 rounded-md">
-                      {results.seoSuggestions?.map((suggestion, i) => (
-                        <li key={i} className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{suggestion}</span>
-                        </li>
+                  <div>
+                    <Label className="mb-2 block">Readability Score</Label>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>Score</span>
+                        <span className={`font-bold ${
+                          results.nlpAnalysis.readability > 80 ? 'text-green-300' : 
+                          results.nlpAnalysis.readability > 60 ? 'text-amber-300' : 
+                          'text-red-300'
+                        }`}>
+                          {results.nlpAnalysis.readability}%
+                        </span>
+                      </div>
+                      <Progress value={results.nlpAnalysis.readability} className="h-2" />
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="mb-2 block">Key Entities</Label>
+                  <div className="bg-green-900/30 p-3 rounded-md">
+                    <div className="flex flex-wrap gap-1">
+                      {results.nlpAnalysis.entities.map((entity, i) => (
+                        <span key={i} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary-foreground">
+                          {entity}
+                        </span>
                       ))}
-                    </ul>
-                  </div>
-                </div>
-              ) : (
-                <Button 
-                  onClick={handleSEOAnalysis} 
-                  disabled={isProcessing}
-                  className="w-full"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <BarChart2 className="mr-2 h-4 w-4" />
-                      Run SEO Analysis
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="nlp-analyzer">
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Use natural language processing to extract insights from your content.
-              </p>
-              
-              {results.nlpAnalysis ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="mb-2 block">Sentiment Analysis</Label>
-                      <div className="bg-muted p-3 rounded-md">
-                        <p className="text-sm font-medium">{results.nlpAnalysis.sentiment}</p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label className="mb-2 block">Readability Score</Label>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span>Score</span>
-                          <span className={`font-bold ${
-                            results.nlpAnalysis.readability > 80 ? 'text-green-500' : 
-                            results.nlpAnalysis.readability > 60 ? 'text-amber-500' : 
-                            'text-red-500'
-                          }`}>
-                            {results.nlpAnalysis.readability}%
-                          </span>
-                        </div>
-                        <Progress value={results.nlpAnalysis.readability} className="h-2" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label className="mb-2 block">Key Entities</Label>
-                    <div className="bg-muted p-3 rounded-md">
-                      <div className="flex flex-wrap gap-1">
-                        {results.nlpAnalysis.entities.map((entity, i) => (
-                          <span key={i} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary-foreground">
-                            {entity}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label className="mb-2 block">Keywords</Label>
-                    <div className="bg-muted p-3 rounded-md">
-                      <div className="flex flex-wrap gap-1">
-                        {results.nlpAnalysis.keywords.map((keyword, i) => (
-                          <span key={i} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
-                            {keyword}
-                          </span>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 </div>
-              ) : (
-                <Button 
-                  onClick={handleNLPAnalysis} 
-                  disabled={isProcessing}
-                  className="w-full"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <MessageSquareText className="mr-2 h-4 w-4" />
-                      Run NLP Analysis
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+                
+                <div>
+                  <Label className="mb-2 block">Keywords</Label>
+                  <div className="bg-green-900/30 p-3 rounded-md">
+                    <div className="flex flex-wrap gap-1">
+                      {results.nlpAnalysis.keywords.map((keyword, i) => (
+                        <span key={i} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Button 
+                onClick={handleNLPAnalysis} 
+                disabled={isProcessing}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <MessageSquareText className="mr-2 h-4 w-4" />
+                    Run NLP Analysis
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

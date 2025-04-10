@@ -36,7 +36,8 @@ const Layout = () => {
         )}
         <main className={cn(
           "flex-1",
-          isHomepage ? "" : isFullWidth ? "" : "p-6"
+          isHomepage ? "" : isFullWidth ? "" : "p-6",
+          isAIWriter ? "bg-white p-4" : ""
         )}>
           <Outlet />
         </main>
