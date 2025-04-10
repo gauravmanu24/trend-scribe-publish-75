@@ -17,7 +17,7 @@ export interface Article {
   updatedAt: string;
   publishedAt: string | null;
   sourceTitle: string | null;
-  sourceLink: string | null;
+  sourceLink?: string | null;
   category: string;
   wordpressPostId: string | null;
   wordpressPostUrl: string | null;

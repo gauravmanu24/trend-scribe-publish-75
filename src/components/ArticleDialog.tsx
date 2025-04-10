@@ -96,7 +96,7 @@ const ArticleDialog: React.FC<ArticleDialogProps> = ({
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl">{article.title}</DialogTitle>
-          <DialogDescription className="flex justify-between items-center">
+          <DialogDescription className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <div className="flex items-center gap-2">
               <span className="text-sm">
                 {format(new Date(article.createdAt), "MMMM d, yyyy")}
@@ -126,14 +126,13 @@ const ArticleDialog: React.FC<ArticleDialogProps> = ({
         </DialogHeader>
         
         <ScrollArea className="flex-grow my-6 pr-4 max-h-[50vh]">
-          <div className="prose prose-sm max-w-none">
-            {article.content.split('\n').map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
+          <div 
+            className="prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: article.content }}
+          />
         </ScrollArea>
         
-        <DialogFooter>
+        <DialogFooter className="flex-wrap justify-end gap-2">
           <DialogClose asChild>
             <Button variant="outline">Close</Button>
           </DialogClose>
@@ -164,7 +163,6 @@ const ArticleDialog: React.FC<ArticleDialogProps> = ({
               href={article.wordpressPostUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-2"
             >
               <Button variant="outline">
                 <ExternalLink className="h-4 w-4 mr-2" />

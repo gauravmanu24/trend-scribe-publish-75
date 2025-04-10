@@ -85,9 +85,9 @@ const ArticlesPage = () => {
         onValueChange={(value) => setActiveTab(value as "articles" | "automation")}
         className="space-y-4"
       >
-        <div className="flex justify-between">
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
           <h1 className="text-3xl font-bold mb-2">Articles</h1>
-          <TabsList>
+          <TabsList className="self-start">
             <TabsTrigger value="articles">
               <PlusCircle className="h-4 w-4 mr-2" />
               Manual Articles
@@ -111,9 +111,9 @@ const ArticlesPage = () => {
               />
             </div>
             
-            <div className="flex gap-2 w-full md:w-auto">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-[150px]">
+            <div className="flex flex-wrap gap-2 w-full md:w-auto">
+              <Select value={statusFilter} onValueChange={setStatusFilter} className="min-w-[140px]">
+                <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -125,8 +125,12 @@ const ArticlesPage = () => {
                 </SelectContent>
               </Select>
               
-              <Select value={sortOrder} onValueChange={(value: "newest" | "oldest" | "title") => setSortOrder(value)}>
-                <SelectTrigger className="w-full md:w-[150px]">
+              <Select 
+                value={sortOrder} 
+                onValueChange={(value: "newest" | "oldest" | "title") => setSortOrder(value)}
+                className="min-w-[140px]"
+              >
+                <SelectTrigger>
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent>
@@ -148,7 +152,7 @@ const ArticlesPage = () => {
           </div>
           
           {sortedArticles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {sortedArticles.map((article) => (
                 <ArticleCard 
                   key={article.id} 

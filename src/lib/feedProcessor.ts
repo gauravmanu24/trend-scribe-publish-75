@@ -123,7 +123,6 @@ export const processFeed = async (
         title,
         content: cleanContent,
         sourceTitle: item.title,
-        sourceLink: item.link,
         status: "generated" as Article["status"],
         category: feed.category || "general",
         createdAt: now,

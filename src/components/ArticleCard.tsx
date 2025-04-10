@@ -36,17 +36,18 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, onView }) => {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex justify-between">
-          <div className="flex flex-col">
+          <div className="flex flex-col w-full">
             <CardTitle 
               className="text-lg font-medium cursor-pointer hover:text-primary truncate"
               onClick={() => onView(article)}
+              title={article.title}
             >
               {article.title}
             </CardTitle>
-            <div className="flex items-center space-x-2 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <div className="text-sm text-muted-foreground">
                 {format(new Date(article.createdAt), "MMM d, yyyy")}
               </div>
@@ -56,29 +57,30 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, onView }) => {
         </div>
       </CardHeader>
       
-      <CardContent className="pb-2">
-        <div className="text-sm line-clamp-3">
+      <CardContent className="pb-2 flex-grow">
+        <div className="text-sm line-clamp-3 break-words">
           {article.content.substring(0, 150)}...
         </div>
         
         {article.sourceTitle && (
-          <div className="mt-2 text-xs text-muted-foreground flex items-center">
-            <span>Source: {article.sourceTitle}</span>
+          <div className="mt-2 text-xs text-muted-foreground">
+            <span className="truncate block">Source: {article.sourceTitle}</span>
             {article.sourceLink && (
               <a 
                 href={article.sourceLink} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="ml-1 inline-flex items-center text-primary hover:underline"
+                className="inline-flex items-center text-primary hover:underline"
               >
                 <ExternalLink className="h-3 w-3 ml-1" />
+                View source
               </a>
             )}
           </div>
         )}
       </CardContent>
       
-      <CardFooter className="pt-2">
+      <CardFooter className="pt-2 mt-auto">
         <div className="flex justify-between items-center w-full">
           <Button 
             variant="ghost" 
