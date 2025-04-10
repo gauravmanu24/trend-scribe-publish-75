@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useInterval } from "@/hooks/useInterval";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +11,13 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Clock, RefreshCw, MoreHorizontal, AlertCircle, X, Plus, Loader2, Play, PlusCircle, Upload, FileText, FileSpreadsheet } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { 
+  Check, Clock, RefreshCw, MoreHorizontal, AlertCircle, X, Plus, Loader2, 
+  Play, PlusCircle, Upload, FileText, FileSpreadsheet, Edit, Trash2 
+} from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { useAppStore } from "@/lib/store";
 import { v4 as uuidv4 } from "uuid";
@@ -53,6 +59,13 @@ const AutomatedPublishing = () => {
     "Write a comprehensive, well-researched article with the following title: '{TITLE}'. Format your response with proper HTML tags including h2, h3 for headings, <ul> and <li> for lists, and <p> tags for paragraphs. The article should be informative, factual, and engaging for readers."
   );
   const [activeTab, setActiveTab] = useState("sources");
+  
+  // Add states for editing functionality
+  const [isEditingSource, setIsEditingSource] = useState(false);
+  const [editSourceId, setEditSourceId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [sourceToDelete, setSourceToDelete] = useState<string | null>(null);
+  const [isSourceSheetOpen, setIsSourceSheetOpen] = useState(false);
   
   useEffect(() => {
     if (sources.length === 0) {
@@ -134,22 +147,45 @@ const AutomatedPublishing = () => {
       if (newSourceType === "file" && uploadedFile) {
         processFileForTitles(uploadedFile).then(extractedTitles => {
           if (extractedTitles && extractedTitles.length > 0) {
-            const newSource: AutomationSource = {
-              id: uuidv4(),
-              name: newSourceName,
-              type: "manual",
-              titles: extractedTitles,
-              createdAt: new Date().toISOString(),
-              lastProcessed: null,
-              isActive: true,
-            };
-            
-            setSources([...sources, newSource]);
-            
-            toast({
-              title: "Source added from file",
-              description: `${newSourceName} with ${extractedTitles.length} titles has been added.`,
-            });
+            if (isEditingSource && editSourceId) {
+              // Update existing source
+              const updatedSources = sources.map(source => {
+                if (source.id === editSourceId) {
+                  return {
+                    ...source,
+                    name: newSourceName,
+                    type: "manual",
+                    titles: extractedTitles,
+                  };
+                }
+                return source;
+              });
+              
+              setSources(updatedSources);
+              
+              toast({
+                title: "Source updated",
+                description: `${newSourceName} has been updated with ${extractedTitles.length} titles.`,
+              });
+            } else {
+              // Add new source
+              const newSource: AutomationSource = {
+                id: uuidv4(),
+                name: newSourceName,
+                type: "manual",
+                titles: extractedTitles,
+                createdAt: new Date().toISOString(),
+                lastProcessed: null,
+                isActive: true,
+              };
+              
+              setSources([...sources, newSource]);
+              
+              toast({
+                title: "Source added from file",
+                description: `${newSourceName} with ${extractedTitles.length} titles has been added.`,
+              });
+            }
           } else {
             toast({
               title: "No titles found",
@@ -158,48 +194,105 @@ const AutomatedPublishing = () => {
             });
           }
           
-          setNewSourceName("");
-          setNewSourceType("manual");
-          setNewSourceUrl("");
-          setNewSourceTitles("");
-          setUploadedFile(null);
-          setIsAddingSource(false);
+          resetSourceForm();
         });
         return;
       }
       
-      const newSource: AutomationSource = {
-        id: uuidv4(),
-        name: newSourceName,
-        type: newSourceType,
-        url: newSourceType === "rss" ? newSourceUrl : undefined,
-        titles: processedTitles,
-        createdAt: new Date().toISOString(),
-        lastProcessed: null,
-        isActive: true,
-      };
+      if (isEditingSource && editSourceId) {
+        // Update existing source
+        const updatedSources = sources.map(source => {
+          if (source.id === editSourceId) {
+            return {
+              ...source,
+              name: newSourceName,
+              type: newSourceType,
+              url: newSourceType === "rss" ? newSourceUrl : undefined,
+              titles: processedTitles,
+            };
+          }
+          return source;
+        });
+        
+        setSources(updatedSources);
+        
+        toast({
+          title: "Source updated",
+          description: `${newSourceName} has been updated.`,
+        });
+      } else {
+        // Add new source
+        const newSource: AutomationSource = {
+          id: uuidv4(),
+          name: newSourceName,
+          type: newSourceType,
+          url: newSourceType === "rss" ? newSourceUrl : undefined,
+          titles: processedTitles,
+          createdAt: new Date().toISOString(),
+          lastProcessed: null,
+          isActive: true,
+        };
+        
+        setSources([...sources, newSource]);
+        
+        toast({
+          title: "Source added",
+          description: `${newSourceName} has been added to your automation sources.`,
+        });
+      }
       
-      setSources([...sources, newSource]);
-      
-      setNewSourceName("");
-      setNewSourceType("manual");
-      setNewSourceUrl("");
-      setNewSourceTitles("");
-      setUploadedFile(null);
-      
-      toast({
-        title: "Source added",
-        description: `${newSourceName} has been added to your automation sources.`,
-      });
+      resetSourceForm();
     } catch (error) {
-      console.error("Error adding source:", error);
+      console.error("Error adding/updating source:", error);
       toast({
-        title: "Error adding source",
-        description: "Failed to add the automation source. Please try again.",
+        title: isEditingSource ? "Error updating source" : "Error adding source",
+        description: "Failed to complete the operation. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsAddingSource(false);
+    }
+  };
+
+  const resetSourceForm = () => {
+    setNewSourceName("");
+    setNewSourceType("manual");
+    setNewSourceUrl("");
+    setNewSourceTitles("");
+    setUploadedFile(null);
+    setIsEditingSource(false);
+    setEditSourceId(null);
+    setIsSourceSheetOpen(false);
+  };
+
+  const editSource = (source: AutomationSource) => {
+    setEditSourceId(source.id);
+    setIsEditingSource(true);
+    setNewSourceName(source.name);
+    setNewSourceType(source.type);
+    setNewSourceUrl(source.url || "");
+    setNewSourceTitles(source.titles ? source.titles.join("\n") : "");
+    setIsSourceSheetOpen(true);
+  };
+
+  const confirmDeleteSource = (sourceId: string) => {
+    setSourceToDelete(sourceId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSource = () => {
+    if (sourceToDelete) {
+      const sourceToRemove = sources.find(s => s.id === sourceToDelete);
+      const updatedSources = sources.filter(s => s.id !== sourceToDelete);
+      setSources(updatedSources);
+      
+      toast({
+        title: "Source deleted",
+        description: sourceToRemove ? `"${sourceToRemove.name}" has been deleted.` : "The automation source has been deleted.",
+      });
+      
+      setSourceToDelete(null);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -551,7 +644,39 @@ const AutomatedPublishing = () => {
                         <Badge variant={source.isActive ? "default" : "secondary"}>
                           {source.isActive ? "Active" : "Paused"}
                         </Badge>
-                        <MoreHorizontal className="h-5 w-5 cursor-pointer text-muted-foreground hover:text-foreground" />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-5 w-5 cursor-pointer text-muted-foreground hover:text-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => editSource(source)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleSourceStatus(source.id, !source.isActive)}>
+                              {source.isActive ? (
+                                <>
+                                  <X className="h-4 w-4 mr-2" />
+                                  Pause
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Activate
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => confirmDeleteSource(source.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                     <CardDescription className="text-xs">
@@ -584,10 +709,18 @@ const AutomatedPublishing = () => {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => deleteSource(source.id)}
+                        className="h-8"
+                        onClick={() => editSource(source)}
                       >
-                        <X className="h-4 w-4" />
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => confirmDeleteSource(source.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardFooter>
@@ -595,18 +728,20 @@ const AutomatedPublishing = () => {
               ))
             )}
             
-            <Sheet>
+            <Sheet open={isSourceSheetOpen} onOpenChange={setIsSourceSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="w-full mt-2">
+                <Button variant="outline" className="w-full mt-2" onClick={() => setIsSourceSheetOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Source
                 </Button>
               </SheetTrigger>
               <SheetContent className="sm:max-w-md">
                 <SheetHeader>
-                  <SheetTitle>Add Automation Source</SheetTitle>
+                  <SheetTitle>{isEditingSource ? "Edit Automation Source" : "Add Automation Source"}</SheetTitle>
                   <SheetDescription>
-                    Configure a new source for automated content generation.
+                    {isEditingSource 
+                      ? "Update this source configuration for automated content generation." 
+                      : "Configure a new source for automated content generation."}
                   </SheetDescription>
                 </SheetHeader>
                 
@@ -754,9 +889,12 @@ const AutomatedPublishing = () => {
                 </div>
                 
                 <SheetFooter>
-                  <SheetClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                  </SheetClose>
+                  <Button 
+                    variant="outline" 
+                    onClick={resetSourceForm}
+                  >
+                    Cancel
+                  </Button>
                   <Button 
                     onClick={addSource}
                     disabled={isAddingSource}
@@ -764,15 +902,32 @@ const AutomatedPublishing = () => {
                     {isAddingSource ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Adding...
+                        {isEditingSource ? "Updating..." : "Adding..."}
                       </>
                     ) : (
-                      "Add Source"
+                      isEditingSource ? "Update Source" : "Add Source"
                     )}
                   </Button>
                 </SheetFooter>
               </SheetContent>
             </Sheet>
+            
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this source and cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteSource} className="bg-red-600 hover:bg-red-700">
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </TabsContent>
         
