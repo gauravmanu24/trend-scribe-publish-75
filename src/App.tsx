@@ -19,6 +19,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsPage from "./pages/TermsPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import LoginPage from "./pages/LoginPage";
+import TitleGeneratorPage from "./pages/TitleGeneratorPage";
 import React from "react";
 
 // Move QueryClient creation inside the App component
@@ -37,6 +38,7 @@ const App = () => {
               <Route index element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/feeds" element={<FeedsPage />} />
+              <Route path="/title-generator" element={<TitleGeneratorPage />} />
               <Route path="/articles" element={<ArticlesPage />} />
               <Route path="/ai-writer" element={<AIWriterPage />} />
               <Route path="/web-stories" element={<WebStoryGeneratorPage />} />

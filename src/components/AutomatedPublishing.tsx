@@ -50,10 +50,6 @@ const AutomatedPublishing = () => {
   const [category, setCategory] = useState("general");
   const [fileType, setFileType] = useState<"txt" | "excel" | "csv">("txt");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isTitleGenerating, setIsTitleGenerating] = useState(false);
-  const [titleGeneratorNiche, setTitleGeneratorNiche] = useState("");
-  const [generatedTitles, setGeneratedTitles] = useState<string[]>([]);
-  const [titleCount, setTitleCount] = useState<string>("10");
   const [customPrompt, setCustomPrompt] = useState(
     "Write a comprehensive, well-researched article with the following title: '{TITLE}'. Format your response with proper HTML tags including h2, h3 for headings, <ul> and <li> for lists, and <p> tags for paragraphs. The article should be informative, factual, and engaging for readers."
   );
@@ -252,102 +248,6 @@ const AutomatedPublishing = () => {
         });
         resolve(null);
       }
-    });
-  };
-
-  const generateTitles = async () => {
-    if (!titleGeneratorNiche) {
-      toast({
-        title: "Niche required",
-        description: "Please specify a niche for title generation.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!openRouterConfig.apiKey) {
-      toast({
-        title: "OpenRouter API key missing",
-        description: "Please configure your OpenRouter API key in settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsTitleGenerating(true);
-    try {
-      const count = parseInt(titleCount) || 10;
-      const modelToUse = openRouterConfig.model || "meta-llama/llama-3.1-8b-instruct";
-      
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${openRouterConfig.apiKey}`,
-          "HTTP-Referer": window.location.origin,
-        },
-        body: JSON.stringify({
-          model: modelToUse,
-          messages: [
-            {
-              role: "system",
-              content: "You are a professional content strategist who creates engaging, clickable article titles."
-            },
-            {
-              role: "user",
-              content: `Generate ${count} unique, engaging, and SEO-friendly article titles for the ${titleGeneratorNiche} niche. Format the output as a numbered list.`
-            }
-          ],
-          temperature: 0.8,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      
-      if (content) {
-        // Extract titles from numbered list format
-        const extractedTitles = content
-          .split(/\d+\.\s+/)
-          .map(line => line.trim())
-          .filter(line => line.length > 0);
-          
-        setGeneratedTitles(extractedTitles);
-        
-        toast({
-          title: "Titles generated",
-          description: `Generated ${extractedTitles.length} titles for ${titleGeneratorNiche} niche.`,
-        });
-      } else {
-        throw new Error("No content returned from API");
-      }
-    } catch (error) {
-      console.error("Title generation error:", error);
-      toast({
-        title: "Title generation failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTitleGenerating(false);
-    }
-  };
-
-  const useGeneratedTitles = () => {
-    if (generatedTitles.length === 0) return;
-    
-    setNewSourceType("manual");
-    setNewSourceName(`${titleGeneratorNiche} Titles`);
-    setNewSourceTitles(generatedTitles.join("\n"));
-    setActiveTab("sources");
-    
-    toast({
-      title: "Titles added to source",
-      description: `${generatedTitles.length} titles added to the new source form.`,
     });
   };
   
@@ -650,10 +550,9 @@ const AutomatedPublishing = () => {
       )}
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="sources">Sources</TabsTrigger>
           <TabsTrigger value="default">Default Settings</TabsTrigger>
-          <TabsTrigger value="title-generator">Title Generator</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
         
@@ -994,78 +893,6 @@ const AutomatedPublishing = () => {
                 <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200 flex gap-2 text-yellow-800">
                   <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
                   <p className="text-sm">WordPress is not configured. Please check your settings.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="title-generator" className="pt-6">
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle>Title Generator</CardTitle>
-              <CardDescription>
-                Generate multiple article titles for a specific niche
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="grid gap-3">
-                  <Label htmlFor="niche">Niche/Topic</Label>
-                  <Input
-                    id="niche"
-                    placeholder="e.g., Digital Marketing, Health & Wellness, etc."
-                    value={titleGeneratorNiche}
-                    onChange={(e) => setTitleGeneratorNiche(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-3">
-                  <Label htmlFor="title-count">Number of Titles</Label>
-                  <Select value={titleCount} onValueChange={setTitleCount}>
-                    <SelectTrigger id="title-count">
-                      <SelectValue placeholder="Select count" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5 Titles</SelectItem>
-                      <SelectItem value="10">10 Titles</SelectItem>
-                      <SelectItem value="25">25 Titles</SelectItem>
-                      <SelectItem value="50">50 Titles</SelectItem>
-                      <SelectItem value="100">100 Titles</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Button 
-                className="w-full" 
-                onClick={generateTitles}
-                disabled={isTitleGenerating || !openRouterConfig.apiKey || !titleGeneratorNiche}
-              >
-                {isTitleGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Titles...
-                  </>
-                ) : (
-                  "Generate Titles"
-                )}
-              </Button>
-
-              {generatedTitles.length > 0 && (
-                <div className="border rounded-md p-4 mt-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-medium">Generated Titles ({generatedTitles.length})</h3>
-                    <Button variant="outline" size="sm" onClick={useGeneratedTitles}>
-                      Use These Titles
-                    </Button>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto space-y-1">
-                    {generatedTitles.map((title, index) => (
-                      <div key={index} className="text-sm p-2 rounded odd:bg-muted/50">
-                        {index + 1}. {title}
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </CardContent>
