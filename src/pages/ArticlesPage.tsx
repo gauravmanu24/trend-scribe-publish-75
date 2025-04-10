@@ -1,237 +1,195 @@
 
-import React from "react";
+import React, { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppStore } from "@/lib/store";
 import ArticleCard from "@/components/ArticleCard";
 import ArticleDialog from "@/components/ArticleDialog";
 import { Article } from "@/types";
+import { Search, PlusCircle, Settings, ArrowUpDown, AutomationIcon } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import AutomatedPublishing from "@/components/AutomatedPublishing";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Send, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
+// Define a custom icon for automation
+const AutomationIcon = (props: React.SVGProps<SVGSVGElement>) => {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  );
+};
 
 const ArticlesPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const articles = useAppStore((state) => state.articles);
-  const wordPressConfig = useAppStore((state) => state.wordPressConfig);
-  const updateArticle = useAppStore((state) => state.updateArticle);
-  const [selectedArticle, setSelectedArticle] = React.useState<Article | null>(null);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [publishingArticleId, setPublishingArticleId] = React.useState<string | null>(null);
-  const { toast } = useToast();
-  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "title">("newest");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [viewingArticle, setViewingArticle] = useState<Article | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"articles" | "automation">("articles");
+
+  // Check if we should show the automation tab by default
+  React.useEffect(() => {
+    if (location.hash === "#automation") {
+      setActiveTab("automation");
+    }
+  }, [location]);
+
+  const filteredArticles = articles.filter((article) => {
+    const matchesQuery =
+      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.content.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus =
+      statusFilter === "all" || article.status === statusFilter;
+    
+    return matchesQuery && matchesStatus;
+  });
+
+  const sortedArticles = [...filteredArticles].sort((a, b) => {
+    if (sortOrder === "newest") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    } else if (sortOrder === "oldest") {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    } else {
+      // title
+      return a.title.localeCompare(b.title);
+    }
+  });
+
   const handleViewArticle = (article: Article) => {
-    setSelectedArticle(article);
+    setViewingArticle(article);
     setDialogOpen(true);
   };
-  
-  // Function to publish article to WordPress
-  const handlePublishToWordPress = async (article: Article) => {
-    if (!article) return;
-    
-    setPublishingArticleId(article.id);
-    
-    try {
-      // Check if WordPress is configured
-      if (!wordPressConfig.url || !wordPressConfig.username || !wordPressConfig.password) {
-        throw new Error("WordPress configuration is incomplete. Please check settings.");
-      }
-
-      // Make the actual WordPress API call
-      const response = await fetch(`${wordPressConfig.url}/wp-json/wp/v2/posts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa(`${wordPressConfig.username}:${wordPressConfig.password}`),
-        },
-        body: JSON.stringify({
-          title: article.title,
-          content: article.content,
-          status: 'publish',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `WordPress error: ${response.statusText}`);
-      }
-      
-      const publishedPost = await response.json();
-      
-      updateArticle(article.id, { 
-        status: "published", 
-        publishedAt: new Date().toISOString(),
-        wordpressPostId: publishedPost.id,
-        wordpressPostUrl: publishedPost.link
-      });
-      
-      toast({
-        title: "Article published",
-        description: "The article was successfully published to WordPress.",
-      });
-    } catch (error) {
-      console.error("Publishing error:", error);
-      toast({
-        title: "Publishing failed",
-        description: error instanceof Error ? error.message : "Failed to publish article to WordPress.",
-        variant: "destructive",
-      });
-    } finally {
-      setPublishingArticleId(null);
-    }
-  };
-  
-  const filteredArticles = React.useMemo(() => {
-    return articles.filter((article) =>
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.content.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [articles, searchTerm]);
-  
-  const publishedArticles = filteredArticles.filter((a) => a.status === "published");
-  const draftArticles = filteredArticles.filter((a) => a.status === "draft" || a.status === "generated");
-  const failedArticles = filteredArticles.filter((a) => a.status === "failed");
-  
-  // Render article item with publish button
-  const renderArticleItem = (article: Article) => (
-    <div key={article.id} className="flex flex-col">
-      <ArticleCard 
-        key={article.id} 
-        article={article} 
-        onView={handleViewArticle} 
-      />
-      {(article.status === "generated" || article.status === "draft") && (
-        <div className="mt-2 flex justify-end">
-          <Button 
-            variant="outline" 
-            className="bg-news-700 hover:bg-news-800 text-white"
-            size="sm"
-            onClick={() => handlePublishToWordPress(article)}
-            disabled={publishingArticleId === article.id || !wordPressConfig.isConnected}
-          >
-            {publishingArticleId === article.id ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Publishing...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4 mr-2" />
-                Send to WordPress
-              </>
-            )}
-          </Button>
-        </div>
-      )}
-    </div>
-  );
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Articles</h1>
-      
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search articles..."
-          className="pl-8"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-      
-      {!wordPressConfig.isConnected && (
-        <div className="bg-amber-50 border border-amber-200 p-3 rounded-md text-amber-800 text-sm">
-          WordPress is not configured. Please visit Settings to connect your WordPress site.
-        </div>
-      )}
-      
-      {articles.length === 0 ? (
-        <div className="py-12 text-center">
-          <h2 className="text-xl font-medium text-gray-500">No articles yet</h2>
-          <p className="text-gray-400 mt-2">
-            Articles will appear here once they are generated from your RSS feeds.
-          </p>
-        </div>
-      ) : (
-        <Tabs defaultValue="all">
+    <div className="container mx-auto space-y-4 py-6">
+      <Tabs
+        defaultValue={activeTab}
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "articles" | "automation")}
+        className="space-y-4"
+      >
+        <div className="flex justify-between">
+          <h1 className="text-3xl font-bold mb-2">Articles</h1>
           <TabsList>
-            <TabsTrigger value="all">
-              All ({filteredArticles.length})
+            <TabsTrigger value="articles">
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Manual Articles
             </TabsTrigger>
-            <TabsTrigger value="published">
-              Published ({publishedArticles.length})
-            </TabsTrigger>
-            <TabsTrigger value="drafts">
-              Drafts ({draftArticles.length})
-            </TabsTrigger>
-            <TabsTrigger value="failed">
-              Failed ({failedArticles.length})
+            <TabsTrigger value="automation">
+              <AutomationIcon className="h-4 w-4 mr-2" />
+              Automated Publishing
             </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="all" className="mt-6">
-            <div className="grid grid-cols-1 gap-6">
-              {filteredArticles.length > 0 ? (
-                filteredArticles
-                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                  .map(renderArticleItem)
-              ) : (
-                <p className="text-center py-8 text-muted-foreground">
-                  No articles match your search.
-                </p>
-              )}
+        </div>
+
+        <TabsContent value="articles" className="space-y-4">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search articles..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
             </div>
-          </TabsContent>
-          
-          <TabsContent value="published" className="mt-6">
-            <div className="grid grid-cols-1 gap-6">
-              {publishedArticles.length > 0 ? (
-                publishedArticles
-                  .sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime())
-                  .map(renderArticleItem)
-              ) : (
-                <p className="text-center py-8 text-muted-foreground">
-                  No published articles found.
-                </p>
-              )}
+            
+            <div className="flex gap-2 w-full md:w-auto">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[150px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="draft">Drafts</SelectItem>
+                  <SelectItem value="generated">Generated</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={sortOrder} onValueChange={(value: "newest" | "oldest" | "title") => setSortOrder(value)}>
+                <SelectTrigger className="w-full md:w-[150px]">
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="title">Title (A-Z)</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button 
+                variant="default" 
+                className="whitespace-nowrap"
+                onClick={() => navigate("/ai-writer")}
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                New Article
+              </Button>
             </div>
-          </TabsContent>
+          </div>
           
-          <TabsContent value="drafts" className="mt-6">
-            <div className="grid grid-cols-1 gap-6">
-              {draftArticles.length > 0 ? (
-                draftArticles
-                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                  .map(renderArticleItem)
-              ) : (
-                <p className="text-center py-8 text-muted-foreground">
-                  No draft articles found.
-                </p>
-              )}
+          {sortedArticles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sortedArticles.map((article) => (
+                <ArticleCard 
+                  key={article.id} 
+                  article={article} 
+                  onView={handleViewArticle} 
+                />
+              ))}
             </div>
-          </TabsContent>
-          
-          <TabsContent value="failed" className="mt-6">
-            <div className="grid grid-cols-1 gap-6">
-              {failedArticles.length > 0 ? (
-                failedArticles
-                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                  .map(renderArticleItem)
-              ) : (
-                <p className="text-center py-8 text-muted-foreground">
-                  No failed articles found.
+          ) : (
+            <div className="flex flex-col items-center justify-center p-12 border border-dashed rounded-lg">
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-semibold">No articles found</h3>
+                <p className="text-muted-foreground">
+                  {searchQuery || statusFilter !== "all"
+                    ? "Try adjusting your search or filters"
+                    : "Start by creating your first article"}
                 </p>
-              )}
+                {!searchQuery && statusFilter === "all" && (
+                  <Button 
+                    variant="default" 
+                    onClick={() => navigate("/ai-writer")}
+                    className="mt-4"
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create Article
+                  </Button>
+                )}
+              </div>
             </div>
-          </TabsContent>
-        </Tabs>
-      )}
+          )}
+        </TabsContent>
+
+        <TabsContent value="automation">
+          <AutomatedPublishing />
+        </TabsContent>
+      </Tabs>
       
       <ArticleDialog 
-        article={selectedArticle} 
+        article={viewingArticle} 
         open={dialogOpen} 
-        onOpenChange={setDialogOpen}
+        onOpenChange={setDialogOpen} 
       />
     </div>
   );

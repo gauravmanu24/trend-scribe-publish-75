@@ -4,43 +4,56 @@ export interface Feed {
   name: string;
   url: string;
   category: string;
-  lastFetched?: string;
   status: "active" | "paused" | "error";
-}
-
-export interface WordPressConfig {
-  url: string;
-  username: string;
-  password: string; // In a real app, use secure storage
-  isConnected: boolean;
-}
-
-export interface OpenRouterConfig {
-  apiKey: string; // In a real app, use secure storage
-  model: string;
-  freeModel?: string;
+  lastFetched?: string;
 }
 
 export interface Article {
   id: string;
   title: string;
   content: string;
-  feedId: string;
-  sourceTitle?: string;
-  sourceLink?: string;
-  status: "pending" | "processing" | "generated" | "published" | "failed" | "draft";
+  status: "draft" | "generated" | "published" | "failed" | "pending" | "processing";
   createdAt: string;
-  publishedAt?: string;
-  wordpressPostId?: number;
-  wordpressPostUrl?: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  sourceTitle: string | null;
+  sourceLink: string | null;
+  category: string;
+  wordpressPostId: string | null;
+  wordpressPostUrl: string | null;
 }
 
-export interface AppState {
-  feeds: Feed[];
-  wordPressConfig: WordPressConfig;
-  openRouterConfig: OpenRouterConfig;
-  articles: Article[];
-  isPolling: boolean;
-  pollingInterval: number; // in minutes
-  lastManualRun: string | null;
+export interface AutomationSource {
+  id: string;
+  name: string;
+  type: "rss" | "sheets" | "manual";
+  url?: string;
+  titles?: string[];
+  createdAt: string;
+  lastProcessed: string | null;
+  isActive: boolean;
+}
+
+export interface AutomationLog {
+  id: string;
+  sourceId: string;
+  sourceName: string;
+  title: string;
+  status: "processing" | "success" | "failed";
+  timestamp: string;
+  message: string;
+  articleId?: string;
+}
+
+export interface OpenRouterConfig {
+  apiKey: string;
+  model: string;
+  isConnected: boolean;
+}
+
+export interface WordPressConfig {
+  url: string;
+  username: string;
+  password: string;
+  isConnected: boolean;
 }
