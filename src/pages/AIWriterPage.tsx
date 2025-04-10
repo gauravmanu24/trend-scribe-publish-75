@@ -334,13 +334,19 @@ const AIWriterPage = () => {
     
     try {
       let wordpressPostId, wordpressPostUrl;
+      const now = new Date().toISOString();
       
       const article = {
         title,
         content: generatedContent,
-        feedId: "manual",
         sourceTitle: "Manual Entry",
+        sourceLink: null,
         status: "generated" as Article["status"],
+        category: "general",
+        createdAt: now,
+        publishedAt: null,
+        wordpressPostId: null,
+        wordpressPostUrl: null,
       };
       
       if (autoPublish && wordPressConfig.isConnected) {
@@ -356,7 +362,7 @@ const AIWriterPage = () => {
               status: "published" as Article["status"],
               wordpressPostId,
               wordpressPostUrl,
-              publishedAt: new Date().toISOString(),
+              publishedAt: now,
             });
           } else {
             addArticle(article);

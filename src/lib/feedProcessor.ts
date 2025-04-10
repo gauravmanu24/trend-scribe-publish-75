@@ -117,13 +117,19 @@ export const processFeed = async (
       // Remove any XML declarations from the content
       const cleanContent = content.replace(/<\?xml[^>]*\?>/g, '');
       
+      const now = new Date().toISOString();
+      
       const article = {
         title,
         content: cleanContent,
-        feedId: feed.id,
         sourceTitle: item.title,
         sourceLink: item.link,
         status: "generated" as Article["status"],
+        category: feed.category || "general",
+        createdAt: now,
+        publishedAt: null,
+        wordpressPostId: null,
+        wordpressPostUrl: null,
       };
       
       addArticle(article);

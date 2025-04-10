@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useInterval } from "@/hooks/useInterval";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +15,7 @@ import { Clock, FileText, Play, Pause, FilePlus, Trash2, AlertCircle, CheckCircl
 import { format } from "date-fns";
 import { useAppStore } from "@/lib/store";
 import { v4 as uuidv4 } from "uuid";
-import { AutomationLog, AutomationSource } from "@/types";
+import { AutomationLog, AutomationSource, Article } from "@/types";
 
 const AutomatedPublishing = () => {
   const { toast } = useToast();
@@ -153,12 +152,10 @@ const AutomatedPublishing = () => {
       
       const now = new Date().toISOString();
       const newArticle = {
-        id: uuidv4(),
         title,
         content: `This is an automatically generated article about "${title}".\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, vitae aliquam nisl nisl eget nisl.\n\nSed euismod, nisl eget ultricies aliquam, nunc nisl aliquet nunc, vitae aliquam nisl nisl eget nisl. Sed euismod, nisl eget ultricies aliquam, nunc nisl aliquet nunc, vitae aliquam nisl nisl eget nisl.\n\nConclusion: This article was automatically generated based on the title.`,
-        status: autoPublish ? "published" : "generated",
+        status: autoPublish ? "published" as Article["status"] : "generated" as Article["status"],
         createdAt: now,
-        updatedAt: now,
         publishedAt: autoPublish ? now : null,
         sourceTitle: "Automated Generation",
         sourceLink: null,
@@ -173,10 +170,10 @@ const AutomatedPublishing = () => {
       if (autoPublish && wordPressConfig.isConnected) {
         // In a real implementation, this would make an API call to WordPress
         // For demo purposes, we'll simulate success
-        return { success: true, articleId: newArticle.id };
+        return { success: true, articleId: uuidv4() };
       }
       
-      return { success: true, articleId: newArticle.id };
+      return { success: true, articleId: uuidv4() };
     } catch (error) {
       console.error("Error processing title:", error);
       return { 
