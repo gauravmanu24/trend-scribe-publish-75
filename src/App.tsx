@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./components/ThemeProvider";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import FeedsPage from "./pages/FeedsPage";
@@ -29,32 +30,34 @@ const App = () => {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/feeds" element={<FeedsPage />} />
-              <Route path="/title-generator" element={<TitleGeneratorPage />} />
-              <Route path="/articles" element={<ArticlesPage />} />
-              <Route path="/ai-writer" element={<AIWriterPage />} />
-              <Route path="/web-stories" element={<WebStoryGeneratorPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/about" element={<AboutUsPage />} />
-              <Route path="/contact" element={<ContactUsPage />} />
-              <Route path="/privacy" element={<PrivacyPolicyPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<LoginPage />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="light">
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Index />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/feeds" element={<FeedsPage />} />
+                <Route path="/title-generator" element={<TitleGeneratorPage />} />
+                <Route path="/articles" element={<ArticlesPage />} />
+                <Route path="/ai-writer" element={<AIWriterPage />} />
+                <Route path="/web-stories" element={<WebStoryGeneratorPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/about" element={<AboutUsPage />} />
+                <Route path="/contact" element={<ContactUsPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/features" element={<FeaturesPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<LoginPage />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

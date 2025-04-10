@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useInterval } from "@/hooks/useInterval";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +37,7 @@ const AutomatedPublishing = () => {
   const openRouterConfig = useAppStore((state) => state.openRouterConfig);
   
   const [newSourceName, setNewSourceName] = useState("");
-  const [newSourceType, setNewSourceType] = useState<"rss" | "sheets" | "manual" | "file" | "title-generator">("manual");
+  const [newSourceType, setNewSourceType] = useState<"rss" | "sheets" | "manual" | "file">("manual");
   const [newSourceUrl, setNewSourceUrl] = useState("");
   const [newSourceTitles, setNewSourceTitles] = useState("");
   const [isAddingSource, setIsAddingSource] = useState(false);
@@ -56,7 +55,6 @@ const AutomatedPublishing = () => {
   const [activeTab, setActiveTab] = useState("sources");
   
   useEffect(() => {
-    // Initialize sources if empty
     if (sources.length === 0) {
       const initialSources: AutomationSource[] = [
         {
@@ -73,13 +71,12 @@ const AutomatedPublishing = () => {
     }
   }, [sources.length, setSources]);
   
-  // Process automation if polling is enabled
   useInterval(() => {
     if (isPolling) {
       console.log("Running automated publishing...");
       processAutomation();
     }
-  }, pollingInterval * 60 * 1000); // Convert minutes to milliseconds
+  }, pollingInterval * 60 * 1000);
   
   const addSource = () => {
     if (!newSourceName) {
@@ -133,15 +130,14 @@ const AutomatedPublishing = () => {
     
     try {
       let processedTitles = titles;
-
-      // Process uploaded file if file source type is selected
+      
       if (newSourceType === "file" && uploadedFile) {
         processFileForTitles(uploadedFile).then(extractedTitles => {
           if (extractedTitles && extractedTitles.length > 0) {
             const newSource: AutomationSource = {
               id: uuidv4(),
               name: newSourceName,
-              type: "manual", // We convert file to manual after processing
+              type: "manual",
               titles: extractedTitles,
               createdAt: new Date().toISOString(),
               lastProcessed: null,
@@ -162,7 +158,6 @@ const AutomatedPublishing = () => {
             });
           }
           
-          // Clear form
           setNewSourceName("");
           setNewSourceType("manual");
           setNewSourceUrl("");
@@ -186,7 +181,6 @@ const AutomatedPublishing = () => {
       
       setSources([...sources, newSource]);
       
-      // Clear form
       setNewSourceName("");
       setNewSourceType("manual");
       setNewSourceUrl("");
@@ -223,13 +217,10 @@ const AutomatedPublishing = () => {
         let titles: string[] = [];
         
         if (file.name.endsWith('.txt')) {
-          // Process text file - split by newlines
           titles = content.split(/\r?\n/).filter(line => line.trim().length > 0);
         } else if (file.name.endsWith('.csv')) {
-          // Simple CSV processing - assuming one title per line
           titles = content.split(/\r?\n/).filter(line => line.trim().length > 0);
         }
-        // For Excel files, we'd need a library like SheetJS, but for demo we'll show a message
         
         resolve(titles);
       };
@@ -295,7 +286,6 @@ const AutomatedPublishing = () => {
       });
       
       if (source.type === "manual" && source.titles && source.titles.length > 0) {
-        // For demo, just pick a random title
         const randomIndex = Math.floor(Math.random() * source.titles.length);
         const title = source.titles[randomIndex];
         
@@ -325,7 +315,6 @@ const AutomatedPublishing = () => {
         }
       }
       
-      // Update source's last processed timestamp
       setSources(sources.map(s => 
         s.id === source.id 
           ? { ...s, lastProcessed: new Date().toISOString() } 
@@ -348,7 +337,6 @@ const AutomatedPublishing = () => {
   
   const generateArticle = async (title: string) => {
     try {
-      // Use OpenRouter API to generate content
       if (!openRouterConfig.apiKey) {
         toast({
           title: "OpenRouter API key missing",
@@ -360,20 +348,16 @@ const AutomatedPublishing = () => {
 
       const now = new Date().toISOString();
       
-      // Prepare prompt using the custom prompt template
       let prompt = customPrompt.replace('{TITLE}', title);
       
-      // Add language instruction
       if (language === "hi") {
         prompt += " Write the article in Hindi language.";
       } else if (language !== "en") {
         prompt += ` Write the article in ${language} language.`;
       }
       
-      // Add tone instruction
       prompt += ` Use a ${tone} tone.`;
       
-      // Add word count instruction
       prompt += ` The article should be approximately ${wordCount} words long.`;
       
       const modelToUse = openRouterConfig.model || "meta-llama/llama-3.1-8b-instruct";
@@ -417,7 +401,6 @@ const AutomatedPublishing = () => {
           throw new Error("AI generated empty content");
         }
         
-        // Create a new article
         const newArticle: Omit<Article, "id" | "updatedAt"> = {
           title,
           content,
@@ -480,11 +463,9 @@ const AutomatedPublishing = () => {
     const file = e.target.files?.[0];
     if (file) {
       setUploadedFile(file);
-      // Extract just the filename to display
-      const fileName = file.name;
       toast({
         title: "File uploaded",
-        description: `${fileName} has been uploaded.`,
+        description: `${file.name} has been uploaded.`,
       });
     }
   };
