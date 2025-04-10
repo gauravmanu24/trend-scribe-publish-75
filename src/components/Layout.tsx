@@ -1,7 +1,8 @@
 
 import React from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { 
   Newspaper, 
@@ -18,6 +19,7 @@ import {
   Tag,
   FileText
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface NavItemProps {
   to: string;
@@ -43,57 +45,67 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label }) => (
 
 const Layout: React.FC = () => {
   const { theme, setTheme } = useTheme();
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been successfully signed out.",
+    });
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
+      {/* Sidebar - Made sticky */}
       <aside className="w-64 border-r border-border dark:border-neutral-800 p-4 hidden md:block">
-        <div className="flex items-center mb-6">
-          <LayoutTemplate className="h-6 w-6 text-primary mr-2" />
-          <h1 className="text-lg font-bold">TrendScribe</h1>
-        </div>
+        <div className="sticky top-0 h-screen overflow-y-auto pb-20">
+          <div className="flex items-center mb-6">
+            <LayoutTemplate className="h-6 w-6 text-primary mr-2" />
+            <h1 className="text-lg font-bold">TrendScribe</h1>
+          </div>
 
-        <nav className="space-y-1">
-          <NavItem to="/dashboard" icon={BarChart2} label="Dashboard" />
-          <NavItem to="/feeds" icon={Rss} label="RSS Feeds" />
-          <NavItem to="/title-generator" icon={Tag} label="Title Generator" />
-          <NavItem to="/articles" icon={Newspaper} label="Articles" />
-          <NavItem to="/ai-writer" icon={PenTool} label="AI Writer" />
-          <NavItem to="/web-stories" icon={BookOpen} label="Web Stories" />
-          <NavItem to="/settings" icon={Settings} label="Settings" />
-        </nav>
+          <nav className="space-y-1">
+            <NavItem to="/dashboard" icon={BarChart2} label="Dashboard" />
+            <NavItem to="/feeds" icon={Rss} label="RSS Feeds" />
+            <NavItem to="/title-generator" icon={Tag} label="Title Generator" />
+            <NavItem to="/articles" icon={Newspaper} label="Articles" />
+            <NavItem to="/ai-writer" icon={PenTool} label="AI Writer" />
+            <NavItem to="/web-stories" icon={BookOpen} label="Web Stories" />
+            <NavItem to="/settings" icon={Settings} label="Settings" />
+          </nav>
 
-        <div className="absolute bottom-4 space-y-2 w-56">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          >
-            {theme === "dark" ? (
-              <>
-                <Sun className="h-4 w-4 mr-2" />
-                Light Mode
-              </>
-            ) : (
-              <>
-                <Moon className="h-4 w-4 mr-2" />
-                Dark Mode
-              </>
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-muted-foreground"
-            onClick={() => {
-              // For demo purposes - would integrate with auth
-              window.location.href = "/";
-            }}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="absolute bottom-4 space-y-2 w-56">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? (
+                <>
+                  <Sun className="h-4 w-4 mr-2" />
+                  Light Mode
+                </>
+              ) : (
+                <>
+                  <Moon className="h-4 w-4 mr-2" />
+                  Dark Mode
+                </>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-muted-foreground"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </aside>
 

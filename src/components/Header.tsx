@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { Newspaper, User, ChevronDown, LogIn, UserPlus, Menu, Settings, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,8 +24,7 @@ const Header = () => {
   const navigate = useNavigate();
   const isPolling = useAppStore((state) => state.isPolling);
   const setPolling = useAppStore((state) => state.setPolling);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userProfile, setUserProfile] = useState<{ name?: string; email?: string } | null>(null);
+  const { user, signOut } = useAuth();
   
   const menuItems = [
     { label: "Home", href: "/" },
@@ -31,31 +32,9 @@ const Header = () => {
     { label: "About Us", href: "/about" },
     { label: "Contact Us", href: "/contact" },
   ];
-  
-  useEffect(() => {
-    const checkAuthState = () => {
-      const savedAuth = localStorage.getItem('auth');
-      if (savedAuth) {
-        try {
-          const authData = JSON.parse(savedAuth);
-          if (authData.isLoggedIn) {
-            setIsLoggedIn(true);
-            setUserProfile(authData.profile || { name: 'User', email: 'user@example.com' });
-          }
-        } catch (e) {
-          console.error('Error parsing auth data:', e);
-          localStorage.removeItem('auth');
-        }
-      }
-    };
-    
-    checkAuthState();
-  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth');
-    setIsLoggedIn(false);
-    setUserProfile(null);
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
     
     toast({
@@ -90,14 +69,14 @@ const Header = () => {
           </nav>
           
           <div className="flex items-center space-x-4">
-            {isLoggedIn && (
+            {user && isPolling !== undefined && (
               <div className={`hidden md:flex items-center ${isPolling ? "text-purples-400" : "text-gray-400"}`}>
                 <div className={`h-2 w-2 rounded-full mr-2 ${isPolling ? "bg-purples-400 animate-pulse-slow" : "bg-gray-400"}`}></div>
                 <span className="text-sm">{isPolling ? "Active" : "Paused"}</span>
               </div>
             )}
             
-            {isLoggedIn && (
+            {user && isPolling !== undefined && (
               <Button
                 variant={isPolling ? "destructive" : "default"}
                 size="sm"
@@ -108,12 +87,12 @@ const Header = () => {
               </Button>
             )}
             
-            {isLoggedIn ? (
+            {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center">
                     <User className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">{userProfile?.name || "Account"}</span>
+                    <span className="hidden sm:inline">{user.email?.split('@')[0] || "Account"}</span>
                     <ChevronDown className="h-4 w-4 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -134,11 +113,11 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <div className="hidden md:flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>
                   <LogIn className="h-4 w-4 mr-2" />
                   Login
                 </Button>
-                <Button variant="default" size="sm" onClick={() => navigate("/signup")} className="btn-gradient-purple">
+                <Button variant="default" size="sm" onClick={() => navigate("/auth?tab=signup")} className="btn-gradient-purple">
                   <UserPlus className="h-4 w-4 mr-2" />
                   Sign Up
                 </Button>
@@ -164,16 +143,16 @@ const Header = () => {
                       </Button>
                     </SheetClose>
                   ))}
-                  {!isLoggedIn ? (
+                  {!user ? (
                     <>
                       <SheetClose asChild>
-                        <Button variant="outline" onClick={() => navigate("/login")}>
+                        <Button variant="outline" onClick={() => navigate("/auth")}>
                           <LogIn className="h-4 w-4 mr-2" />
                           Login
                         </Button>
                       </SheetClose>
                       <SheetClose asChild>
-                        <Button className="btn-gradient-purple" onClick={() => navigate("/signup")}>
+                        <Button className="btn-gradient-purple" onClick={() => navigate("/auth?tab=signup")}>
                           <UserPlus className="h-4 w-4 mr-2" />
                           Sign Up
                         </Button>
@@ -181,12 +160,14 @@ const Header = () => {
                     </>
                   ) : (
                     <>
-                      <Button 
-                        variant={isPolling ? "destructive" : "default"}
-                        onClick={() => setPolling(!isPolling)}
-                      >
-                        {isPolling ? "Pause Service" : "Start Service"}
-                      </Button>
+                      {isPolling !== undefined && (
+                        <Button 
+                          variant={isPolling ? "destructive" : "default"}
+                          onClick={() => setPolling(!isPolling)}
+                        >
+                          {isPolling ? "Pause Service" : "Start Service"}
+                        </Button>
+                      )}
                       <SheetClose asChild>
                         <Button variant="ghost" className="justify-start" onClick={() => navigate("/dashboard")}>
                           Dashboard

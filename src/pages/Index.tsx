@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,10 +11,18 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { RssIcon, Newspaper, PencilLine, RotateCcw, BarChart3, Zap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import Header from "@/components/Header";
 
 const Index = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+      {/* Header */}
+      <Header />
+
       {/* Hero Section */}
       <section className="relative py-20 px-6 md:px-10">
         <div className="max-w-7xl mx-auto">
@@ -34,12 +42,20 @@ const Index = () => {
                   advanced AI technology. Save time, increase publishing frequency, and grow your website.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button size="lg" asChild>
-                    <Link to="/feeds">Get Started</Link>
-                  </Button>
-                  <Button size="lg" variant="outline" asChild>
-                    <Link to="/ai-writer">Try AI Writer</Link>
-                  </Button>
+                  {user ? (
+                    <Button size="lg" asChild>
+                      <Link to="/dashboard">Go to Dashboard</Link>
+                    </Button>
+                  ) : (
+                    <>
+                      <Button size="lg" asChild>
+                        <Link to="/auth">Get Started</Link>
+                      </Button>
+                      <Button size="lg" variant="outline" asChild>
+                        <Link to="/features">Learn More</Link>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -256,9 +272,15 @@ const Index = () => {
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Start publishing high-quality, SEO-optimized content consistently with minimal effort.
           </p>
-          <Button size="lg" className="px-8" asChild>
-            <Link to="/feeds">Get Started Now</Link>
-          </Button>
+          {user ? (
+            <Button size="lg" className="px-8" asChild>
+              <Link to="/dashboard">Go to Dashboard</Link>
+            </Button>
+          ) : (
+            <Button size="lg" className="px-8" asChild>
+              <Link to="/auth">Get Started Now</Link>
+            </Button>
+          )}
         </div>
       </section>
     </div>
