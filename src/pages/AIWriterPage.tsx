@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +18,6 @@ import ContentTools from "@/components/ContentTools";
 import ImageGenerator from "@/components/ImageGenerator";
 import RichTextEditor from "@/components/RichTextEditor";
 
-// Free models from OpenRouter
 const freeAiModels = [
   { value: "google/gemini-2.0-flash-thinking-exp:free", label: "Gemini 2.0 Flash Thinking" },
   { value: "google/gemini-2.0-flash-thinking-exp-1219:free", label: "Gemini 2.0 Flash Thinking 1219" },
@@ -65,7 +63,6 @@ const freeAiModels = [
   { value: "google/gemma-2-9b-it:free", label: "Gemma 2 9B" }
 ];
 
-// Define custom integration models for other providers
 const apiIntegrations = [
   {
     name: "OpenAI",
@@ -123,7 +120,6 @@ const AIWriterPage = () => {
   const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [showAiImageGenerator, setShowAiImageGenerator] = useState(false);
   
-  // New options
   const [tone, setTone] = useState("professional");
   const [language, setLanguage] = useState("en");
   const [wordCount, setWordCount] = useState(1000);
@@ -158,18 +154,15 @@ const AIWriterPage = () => {
       } else if (modelType === "custom") {
         modelToUse = customModel;
       } else if (modelType === "external") {
-        // In a real app, this would be handled differently based on the API provider
         modelToUse = selectedApiModel;
       }
       
-      // Language mapping for system prompt
       const languageNames: {[key: string]: string} = {
         en: "English", es: "Spanish", fr: "French", de: "German",
         it: "Italian", pt: "Portuguese", ru: "Russian", ja: "Japanese",
         zh: "Chinese", ar: "Arabic", hi: "Hindi"
       };
       
-      // Create a tailored system message based on the options
       const systemMessage = `You are a professional content writer who creates well-researched, informative articles. 
       Write in a ${tone} tone in ${languageNames[language] || "English"}. 
       ${outputFormat === "html" ? "Format your response with proper HTML tags including h2, h3, h4 for headings, <ul> and <li> for lists, and <p> tags for paragraphs." : 
@@ -187,7 +180,6 @@ const AIWriterPage = () => {
         "Make it informative, factual, and engaging for readers with clear sections."
       }`;
       
-      // Simulate API call (in a real app, you would choose the correct endpoint based on modelType)
       let apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
       let apiKey = openRouterConfig.apiKey;
       let apiHeaders = {
@@ -195,12 +187,8 @@ const AIWriterPage = () => {
         "Authorization": `Bearer ${apiKey}`,
       };
       
-      // In a real app, this would select different API endpoints and handle different auth methods
       if (modelType === "external") {
-        // Simulate different API providers
-        // This is just for demonstration - in a real app, you would implement actual API calls
         console.log(`Using external API provider: ${apiProvider}, model: ${selectedApiModel}`);
-        // We're still using OpenRouter in this demo
       }
       
       const response = await fetch(apiEndpoint, {
@@ -227,7 +215,6 @@ const AIWriterPage = () => {
       }
       
       const data = await response.json();
-      // Fix the error by checking if data.choices exists and has at least one item
       const content = data.choices && data.choices.length > 0 
         ? data.choices[0]?.message?.content || "" 
         : "";
@@ -245,7 +232,6 @@ const AIWriterPage = () => {
         description: "Your article has been successfully generated.",
       });
       
-      // Automatically save and publish if WordPress is connected
       if (autoPublish && wordPressConfig.isConnected) {
         await handlePublishToWordPress(title, content);
       }
@@ -317,7 +303,6 @@ const AIWriterPage = () => {
     try {
       let wordpressPostId, wordpressPostUrl;
       
-      // Always save article to local store
       const article = {
         title,
         content: generatedContent,
@@ -326,7 +311,6 @@ const AIWriterPage = () => {
         status: "generated" as Article["status"],
       };
       
-      // Try publishing to WordPress if configured
       if (autoPublish && wordPressConfig.isConnected) {
         try {
           const publishedData = await handlePublishToWordPress(title, generatedContent);
@@ -335,7 +319,6 @@ const AIWriterPage = () => {
             wordpressPostId = publishedData.id;
             wordpressPostUrl = publishedData.link;
             
-            // Update article with WordPress data
             addArticle({
               ...article,
               status: "published" as Article["status"],
@@ -347,12 +330,10 @@ const AIWriterPage = () => {
             addArticle(article);
           }
         } catch (error) {
-          // If WordPress publishing fails, still save the article locally
           addArticle(article);
           throw error;
         }
       } else {
-        // Just save locally
         addArticle(article);
         
         toast({
@@ -369,7 +350,6 @@ const AIWriterPage = () => {
       navigate("/articles");
     } catch (error) {
       console.error("Saving error:", error);
-      // Error message already shown by handlePublishToWordPress
     }
   };
 
@@ -400,267 +380,273 @@ const AIWriterPage = () => {
         </Alert>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Article Details</CardTitle>
-            <CardDescription>
-              Enter details for your AI-generated article
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Article Title</Label>
-              <Input 
-                id="title"
-                placeholder="Enter article title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="topic">Topic or Keywords</Label>
-              <Input
-                id="topic"
-                placeholder="Enter topic, keywords, or brief description"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-              />
-            </div>
-            
-            <AIWriterOptions 
-              tone={tone}
-              setTone={setTone}
-              language={language}
-              setLanguage={setLanguage}
-              wordCount={wordCount}
-              setWordCount={setWordCount}
-              outputFormat={outputFormat}
-              setOutputFormat={setOutputFormat}
-            />
-            
-            <div className="space-y-4 pt-4">
-              <Label>AI Provider & Model</Label>
-              <Tabs 
-                value={modelType} 
-                onValueChange={setModelType}
-                className="w-full"
-              >
-                <TabsList className="grid grid-cols-4 w-full">
-                  <TabsTrigger value="predefined">Predefined</TabsTrigger>
-                  <TabsTrigger value="free">Free Models</TabsTrigger>
-                  <TabsTrigger value="custom">Custom</TabsTrigger>
-                  <TabsTrigger value="external">External APIs</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="predefined" className="space-y-2 mt-4">
-                  <Label htmlFor="model">OpenRouter Model</Label>
-                  <Select 
-                    value={openRouterConfig.model} 
-                    onValueChange={(value) => updateOpenRouterConfig({ model: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select AI model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="anthropic/claude-3-opus:beta">Claude 3 Opus</SelectItem>
-                      <SelectItem value="anthropic/claude-3-sonnet:beta">Claude 3 Sonnet</SelectItem>
-                      <SelectItem value="anthropic/claude-3-haiku:beta">Claude 3 Haiku</SelectItem>
-                      <SelectItem value="google/gemini-pro">Google Gemini Pro</SelectItem>
-                      <SelectItem value="openai/gpt-4o">GPT-4o</SelectItem>
-                      <SelectItem value="meta-llama/llama-3-70b-instruct">Llama 3 70B</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TabsContent>
-                
-                <TabsContent value="free" className="space-y-2 mt-4">
-                  <Label htmlFor="free-model">Free AI Models</Label>
-                  <Select 
-                    value={openRouterConfig.freeModel || freeAiModels[0].value} 
-                    onValueChange={(value) => updateOpenRouterConfig({ freeModel: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select free AI model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <ScrollArea className="h-80">
-                        {freeAiModels.map((model) => (
-                          <SelectItem key={model.value} value={model.value}>
-                            {model.label}
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
-                </TabsContent>
-                
-                <TabsContent value="custom" className="space-y-2 mt-4">
-                  <Label htmlFor="custom-model">Custom Model ID</Label>
-                  <Input 
-                    id="custom-model"
-                    placeholder="Enter model ID (e.g., anthropic/claude-3-opus:beta)"
-                    value={customModel}
-                    onChange={(e) => setCustomModel(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Enter the full model ID from OpenRouter
-                  </p>
-                </TabsContent>
-
-                <TabsContent value="external" className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="api-provider">API Provider</Label>
-                    <Select 
-                      value={apiProvider} 
-                      onValueChange={handleApiProviderChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select API provider" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {apiIntegrations.map((api) => (
-                          <SelectItem key={api.name} value={api.name.toLowerCase()}>
-                            {api.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="api-model">Model</Label>
-                    <Select 
-                      value={selectedApiModel} 
-                      onValueChange={setSelectedApiModel}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {selectedApi.models.map((model) => (
-                          <SelectItem key={model.value} value={model.value}>
-                            {model.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="api-key">API Key</Label>
-                    <Input 
-                      id="api-key"
-                      type="password"
-                      placeholder={`Enter your ${selectedApi.name} API key`}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      This key is only used for this session and not stored permanently.
-                    </p>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            {wordPressConfig.isConnected && (
-              <div className="flex items-center space-x-2 pt-4">
-                <Checkbox 
-                  id="auto-publish" 
-                  checked={autoPublish} 
-                  onCheckedChange={(checked) => setAutoPublish(checked === true)}
-                />
-                <Label htmlFor="auto-publish">Auto-publish to WordPress when saving</Label>
-              </div>
-            )}
-            
-            <div className="pt-4">
-              <Button 
-                variant="outline"
-                className="w-full mb-4" 
-                onClick={() => setShowAiImageGenerator(true)}
-                disabled={loading}
-              >
-                <ImageIcon className="mr-2 h-4 w-4" />
-                Generate AI Image
-              </Button>
-              
-              <Button 
-                className="w-full btn-gradient-primary"
-                onClick={handleGenerate}
-                disabled={loading || !title || !topic || (modelType !== "external" && !openRouterConfig.apiKey)}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  "Generate Content"
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="md:col-span-3">
+          <ContentTools content={generatedContent} />
+        </div>
         
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Generated Content</CardTitle>
-              <CardDescription>
-                AI-generated content based on your inputs
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RichTextEditor 
-                value={generatedContent} 
-                onChange={setGeneratedContent}
-                onImageRequest={() => setShowImageGenerator(true)} 
-              />
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={() => setGeneratedContent("")}
-                disabled={!generatedContent || loading}
-              >
-                Clear
-              </Button>
-              <Button 
-                onClick={handleSave}
-                disabled={!generatedContent || loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {autoPublish && wordPressConfig.isConnected ? "Publishing..." : "Saving..."}
-                  </>
-                ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    {autoPublish && wordPressConfig.isConnected ? "Save & Publish" : "Save Article"}
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
+        <div className="md:col-span-9">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Article Details</CardTitle>
+                <CardDescription>
+                  Enter details for your AI-generated article
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Article Title</Label>
+                  <Input 
+                    id="title"
+                    placeholder="Enter article title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="topic">Topic or Keywords</Label>
+                  <Input
+                    id="topic"
+                    placeholder="Enter topic, keywords, or brief description"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                  />
+                </div>
+                
+                <AIWriterOptions 
+                  tone={tone}
+                  setTone={setTone}
+                  language={language}
+                  setLanguage={setLanguage}
+                  wordCount={wordCount}
+                  setWordCount={setWordCount}
+                  outputFormat={outputFormat}
+                  setOutputFormat={setOutputFormat}
+                />
+                
+                <div className="space-y-4 pt-4">
+                  <Label>AI Provider & Model</Label>
+                  <Tabs 
+                    value={modelType} 
+                    onValueChange={setModelType}
+                    className="w-full"
+                  >
+                    <TabsList className="grid grid-cols-4 w-full">
+                      <TabsTrigger value="predefined">Predefined</TabsTrigger>
+                      <TabsTrigger value="free">Free Models</TabsTrigger>
+                      <TabsTrigger value="custom">Custom</TabsTrigger>
+                      <TabsTrigger value="external">External APIs</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="predefined" className="space-y-2 mt-4">
+                      <Label htmlFor="model">OpenRouter Model</Label>
+                      <Select 
+                        value={openRouterConfig.model} 
+                        onValueChange={(value) => updateOpenRouterConfig({ model: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select AI model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="anthropic/claude-3-opus:beta">Claude 3 Opus</SelectItem>
+                          <SelectItem value="anthropic/claude-3-sonnet:beta">Claude 3 Sonnet</SelectItem>
+                          <SelectItem value="anthropic/claude-3-haiku:beta">Claude 3 Haiku</SelectItem>
+                          <SelectItem value="google/gemini-pro">Google Gemini Pro</SelectItem>
+                          <SelectItem value="openai/gpt-4o">GPT-4o</SelectItem>
+                          <SelectItem value="meta-llama/llama-3-70b-instruct">Llama 3 70B</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TabsContent>
+                    
+                    <TabsContent value="free" className="space-y-2 mt-4">
+                      <Label htmlFor="free-model">Free AI Models</Label>
+                      <Select 
+                        value={openRouterConfig.freeModel || freeAiModels[0].value} 
+                        onValueChange={(value) => updateOpenRouterConfig({ freeModel: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select free AI model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <ScrollArea className="h-80">
+                            {freeAiModels.map((model) => (
+                              <SelectItem key={model.value} value={model.value}>
+                                {model.label}
+                              </SelectItem>
+                            ))}
+                          </ScrollArea>
+                        </SelectContent>
+                      </Select>
+                    </TabsContent>
+                    
+                    <TabsContent value="custom" className="space-y-2 mt-4">
+                      <Label htmlFor="custom-model">Custom Model ID</Label>
+                      <Input 
+                        id="custom-model"
+                        placeholder="Enter model ID (e.g., anthropic/claude-3-opus:beta)"
+                        value={customModel}
+                        onChange={(e) => setCustomModel(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Enter the full model ID from OpenRouter
+                      </p>
+                    </TabsContent>
 
-          {generatedContent && (
-            <ContentTools content={generatedContent} />
-          )}
+                    <TabsContent value="external" className="space-y-4 mt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="api-provider">API Provider</Label>
+                        <Select 
+                          value={apiProvider} 
+                          onValueChange={handleApiProviderChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select API provider" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {apiIntegrations.map((api) => (
+                              <SelectItem key={api.name} value={api.name.toLowerCase()}>
+                                {api.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="api-model">Model</Label>
+                        <Select 
+                          value={selectedApiModel} 
+                          onValueChange={setSelectedApiModel}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select model" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {selectedApi.models.map((model) => (
+                              <SelectItem key={model.value} value={model.value}>
+                                {model.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="api-key">API Key</Label>
+                        <Input 
+                          id="api-key"
+                          type="password"
+                          placeholder={`Enter your ${selectedApi.name} API key`}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          This key is only used for this session and not stored permanently.
+                        </p>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+
+                {wordPressConfig.isConnected && (
+                  <div className="flex items-center space-x-2 pt-4">
+                    <Checkbox 
+                      id="auto-publish" 
+                      checked={autoPublish} 
+                      onCheckedChange={(checked) => setAutoPublish(checked === true)}
+                    />
+                    <Label htmlFor="auto-publish">Auto-publish to WordPress when saving</Label>
+                  </div>
+                )}
+                
+                <div className="pt-4">
+                  <Button 
+                    variant="outline"
+                    className="w-full mb-4" 
+                    onClick={() => setShowAiImageGenerator(true)}
+                    disabled={loading}
+                  >
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    Generate AI Image
+                  </Button>
+                  
+                  <Button 
+                    className="w-full btn-gradient-primary"
+                    onClick={handleGenerate}
+                    disabled={loading || !title || !topic || (modelType !== "external" && !openRouterConfig.apiKey)}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      "Generate Content"
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Generated Content</CardTitle>
+                <CardDescription>
+                  AI-generated content based on your inputs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RichTextEditor 
+                  value={generatedContent} 
+                  onChange={setGeneratedContent}
+                  onImageRequest={() => setShowImageGenerator(true)} 
+                />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setGeneratedContent("")}
+                  disabled={!generatedContent || loading}
+                >
+                  Clear
+                </Button>
+                <Button 
+                  onClick={handleSave}
+                  disabled={!generatedContent || loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {autoPublish && wordPressConfig.isConnected ? "Publishing..." : "Saving..."}
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      {autoPublish && wordPressConfig.isConnected ? "Save & Publish" : "Save Article"}
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
 
           {showAiImageGenerator && (
-            <ImageGenerator onImageSelect={handleAddImage} />
+            <div className="mt-6">
+              <ImageGenerator onImageSelect={handleAddImage} />
+            </div>
           )}
 
           {showImageGenerator && !showAiImageGenerator && (
-            <ImageGenerator onImageSelect={handleAddImage} />
+            <div className="mt-6">
+              <ImageGenerator onImageSelect={handleAddImage} />
+            </div>
           )}
 
           {!showImageGenerator && !showAiImageGenerator && generatedContent && (
             <Button 
               variant="outline" 
               onClick={() => setShowImageGenerator(true)}
-              className="w-full"
+              className="w-full mt-6"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Image

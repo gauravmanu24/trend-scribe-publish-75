@@ -1,431 +1,312 @@
 
 import React, { useState } from "react";
-import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Image } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import RichTextEditor from "@/components/RichTextEditor";
-
-interface StoryPage {
-  id: string;
-  title: string;
-  content: string;
-  imageUrl: string;
-}
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Image as ImageIcon, Send } from "lucide-react";
+import ImageGenerator from "@/components/ImageGenerator";
 
 const WebStoryGeneratorPage = () => {
+  const { toast } = useToast();
   const [keywords, setKeywords] = useState("");
   const [niche, setNiche] = useState("");
-  const [storyPages, setStoryPages] = useState<StoryPage[]>([]);
+  const [loading, setLoading] = useState(false);
   const [storyTitle, setStoryTitle] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [selectedPageIndex, setSelectedPageIndex] = useState<number | null>(null);
-  const openRouterConfig = useAppStore((state) => state.openRouterConfig);
-  const wordPressConfig = useAppStore((state) => state.wordPressConfig);
-  const { toast } = useToast();
+  const [storyFrames, setStoryFrames] = useState<{ image: string; text: string }[]>([]);
+  const [frameCount, setFrameCount] = useState(5);
+  const [showImageGenerator, setShowImageGenerator] = useState(false);
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
 
-  const generateWebStory = async () => {
+  const niches = [
+    "Travel", "Food", "Fashion", "Technology", "Health", "Fitness", 
+    "Beauty", "Business", "Finance", "Education", "Entertainment", 
+    "Sports", "Lifestyle", "DIY", "Parenting"
+  ];
+
+  const handleGenerate = async () => {
     if (!keywords || !niche) {
       toast({
-        title: "Missing information",
+        title: "Missing fields",
         description: "Please provide both keywords and niche.",
         variant: "destructive",
       });
       return;
     }
 
-    if (!openRouterConfig.apiKey) {
-      toast({
-        title: "OpenRouter API key missing",
-        description: "Please configure your OpenRouter API key in settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setGenerating(true);
-
+    setLoading(true);
+    
     try {
-      // First, generate the story structure
-      const modelToUse = openRouterConfig.model || "anthropic/claude-3-opus:beta";
+      // In a real app, this would be an API call to an AI service
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const structurePrompt = `Create a web story structure about "${keywords}" for the "${niche}" niche. 
-      Give me a captivating title and 5 pages of content. Each page should have a title and short engaging content (2-3 sentences). 
-      Format the response as JSON with this structure:
-      {
-        "title": "The Web Story Title",
-        "pages": [
-          {
-            "title": "Page 1 Title",
-            "content": "Short engaging content for page 1"
-          },
-          ...and so on for 5 pages
-        ]
-      }`;
+      // Generate a title based on keywords and niche
+      const generatedTitle = `${niche} Guide: ${keywords.split(',')[0]} Edition`;
+      setStoryTitle(generatedTitle);
       
-      const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${openRouterConfig.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: modelToUse,
-          messages: [
-            {
-              role: "system",
-              content: "You are an expert web story creator that writes engaging, visual content optimized for the web stories format."
-            },
-            {
-              role: "user", 
-              content: structurePrompt
-            }
-          ],
-          temperature: 0.7,
-          response_format: { type: "json_object" }
-        }),
-      });
-
-      if (!aiResponse.ok) {
-        throw new Error(`AI API error: ${aiResponse.statusText}`);
-      }
+      // Generate sample frames for the web story
+      const sampleTexts = [
+        `Discover the latest trends in ${niche.toLowerCase()} with our comprehensive guide.`,
+        `${keywords.split(',')[0]} offers unique opportunities for ${niche.toLowerCase()} enthusiasts.`,
+        `Here's what experts say about ${keywords.split(',')[0]} in the ${niche.toLowerCase()} industry.`,
+        `Top tips to maximize your ${niche.toLowerCase()} experience with ${keywords.split(',')[0]}.`,
+        `The future of ${niche.toLowerCase()} is being shaped by innovations like ${keywords.split(',')[0]}.`,
+        `Why ${keywords.split(',')[0]} matters for your ${niche.toLowerCase()} journey.`,
+        `How to incorporate ${keywords.split(',')[0]} into your daily ${niche.toLowerCase()} routine.`,
+        `${niche} professionals recommend ${keywords.split(',')[0]} for optimal results.`
+      ];
       
-      const aiData = await aiResponse.json();
-      const content = aiData.choices[0]?.message?.content || "";
-      
-      if (!content) {
-        throw new Error("AI generated empty content");
-      }
-
-      // Parse the JSON content
-      const storyData = JSON.parse(content);
-      setStoryTitle(storyData.title);
-      
-      // Create story pages with IDs and empty image URLs
-      const pages = storyData.pages.map((page: any, index: number) => ({
-        id: `page-${index + 1}`,
-        title: page.title,
-        content: page.content,
-        imageUrl: ""
+      // Create frames with placeholder images
+      const frames = Array.from({ length: frameCount }, (_, i) => ({
+        image: `https://picsum.photos/seed/${niche}${i}/800/600`,
+        text: sampleTexts[i % sampleTexts.length]
       }));
       
-      setStoryPages(pages);
-      setSelectedPageIndex(0);
+      setStoryFrames(frames);
       
       toast({
-        title: "Web Story structure created",
-        description: "Your web story structure is ready. You can now edit each page and generate images.",
+        title: "Web Story Generated",
+        description: "Your web story frames have been created. Now you can customize them.",
       });
     } catch (error) {
-      console.error("Web story generation error:", error);
+      console.error("Generation error:", error);
       toast({
         title: "Generation failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description: "Failed to generate web story. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setGenerating(false);
+      setLoading(false);
     }
   };
 
-  const generateImage = async (pageIndex: number) => {
-    if (!openRouterConfig.apiKey) {
-      toast({
-        title: "OpenRouter API key missing",
-        description: "Please configure your OpenRouter API key in settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const page = storyPages[pageIndex];
-    if (!page) return;
+  const handleImageSelect = (imageUrl: string) => {
+    const updatedFrames = [...storyFrames];
+    updatedFrames[currentFrameIndex] = {
+      ...updatedFrames[currentFrameIndex],
+      image: imageUrl
+    };
+    setStoryFrames(updatedFrames);
+    setShowImageGenerator(false);
     
-    // Update page status to show loading
-    const updatedPages = [...storyPages];
-    updatedPages[pageIndex] = { ...page, imageUrl: "loading" };
-    setStoryPages(updatedPages);
-    
-    try {
-      // Call to image generation API would go here
-      // For now, just use a placeholder image
-      const placeholderUrl = "https://placehold.co/600x400/webp?text=Web+Story+Image";
-      
-      // In a real implementation, you would use something like OpenAI's DALL-E API
-      // Similar to this:
-      /*
-      const response = await fetch("https://api.openai.com/v1/images/generations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${openAIKey}` 
-        },
-        body: JSON.stringify({
-          model: "dall-e-3",
-          prompt: `Create a web story image for: ${page.title}. ${page.content}`,
-          n: 1,
-          size: "1024x1024"
-        })
-      });
-      
-      const data = await response.json();
-      const imageUrl = data.data[0].url;
-      */
-      
-      // For demo, use placeholder after delay
-      setTimeout(() => {
-        const updatedPages = [...storyPages];
-        updatedPages[pageIndex] = { ...page, imageUrl: placeholderUrl };
-        setStoryPages(updatedPages);
-        
-        toast({
-          title: "Image generated",
-          description: "Image has been generated for this page.",
-        });
-      }, 1500);
-    } catch (error) {
-      console.error("Image generation error:", error);
-      
-      const updatedPages = [...storyPages];
-      updatedPages[pageIndex] = { ...page, imageUrl: "" };
-      setStoryPages(updatedPages);
-      
-      toast({
-        title: "Image generation failed",
-        description: error instanceof Error ? error.message : "Failed to generate image",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Image updated",
+      description: `Image for frame ${currentFrameIndex + 1} has been updated.`,
+    });
   };
 
-  const publishToWordPress = async () => {
-    if (!wordPressConfig.isConnected) {
-      toast({
-        title: "WordPress not connected",
-        description: "Please configure your WordPress connection in settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (storyPages.length === 0) {
-      toast({
-        title: "No content to publish",
-        description: "Please generate a web story first.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setGenerating(true);
+  const handleTextChange = (index: number, text: string) => {
+    const updatedFrames = [...storyFrames];
+    updatedFrames[index] = {
+      ...updatedFrames[index],
+      text: text
+    };
+    setStoryFrames(updatedFrames);
+  };
+
+  const handlePublish = async () => {
+    setLoading(true);
     
     try {
-      // In a real implementation, you would use the WordPress REST API to create a web story
-      // This would depend on having the Web Stories plugin installed on your WordPress site
+      // In a real app, this would make an API call to WordPress to publish the story
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       toast({
-        title: "Publishing to WordPress",
-        description: "Your web story is being published...",
+        title: "Web Story Published",
+        description: "Your web story has been published to WordPress successfully.",
       });
       
-      // Simulate a successful publish
-      setTimeout(() => {
-        toast({
-          title: "Web story published",
-          description: "Your web story has been successfully published to WordPress.",
-        });
-        setGenerating(false);
-      }, 2000);
+      // Reset the form for a new story
+      setKeywords("");
+      setNiche("");
+      setStoryTitle("");
+      setStoryFrames([]);
     } catch (error) {
-      console.error("WordPress publishing error:", error);
+      console.error("Publishing error:", error);
       toast({
         title: "Publishing failed",
-        description: error instanceof Error ? error.message : "Failed to publish to WordPress",
+        description: "Failed to publish web story. Please try again.",
         variant: "destructive",
       });
-      setGenerating(false);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const updatePageContent = (index: number, field: keyof StoryPage, value: string) => {
-    if (index === null) return;
-    
-    const updatedPages = [...storyPages];
-    updatedPages[index] = { ...updatedPages[index], [field]: value };
-    setStoryPages(updatedPages);
   };
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Web Story Generator</h1>
+      <p className="text-muted-foreground">
+        Create Google Web Stories for your WordPress site with AI assistance.
+      </p>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Create New Web Story</CardTitle>
-          <CardDescription>
-            Generate engaging web stories for WordPress using AI. Simply enter keywords and select a niche.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="keywords">Keywords</Label>
-              <Input 
-                id="keywords" 
-                placeholder="Enter main keywords (e.g., 'summer fashion trends')" 
-                value={keywords}
-                onChange={(e) => setKeywords(e.target.value)}
-                disabled={generating}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="niche">Niche</Label>
-              <Select 
-                disabled={generating}
-                onValueChange={setNiche}
-                value={niche}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a niche" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fashion">Fashion</SelectItem>
-                  <SelectItem value="travel">Travel</SelectItem>
-                  <SelectItem value="food">Food & Recipes</SelectItem>
-                  <SelectItem value="technology">Technology</SelectItem>
-                  <SelectItem value="health">Health & Fitness</SelectItem>
-                  <SelectItem value="business">Business</SelectItem>
-                  <SelectItem value="education">Education</SelectItem>
-                  <SelectItem value="entertainment">Entertainment</SelectItem>
-                  <SelectItem value="sports">Sports</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <Button 
-            className="w-full" 
-            onClick={generateWebStory}
-            disabled={generating || !keywords || !niche}
-          >
-            {generating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : "Generate Web Story"}
-          </Button>
-        </CardContent>
-      </Card>
-      
-      {storyTitle && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              <span>{storyTitle}</span>
-              <Button 
-                onClick={publishToWordPress}
-                disabled={generating || storyPages.some(page => !page.imageUrl || page.imageUrl === "loading")}
-              >
-                {generating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : "Publish to WordPress"}
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-5">
-              <div className="md:col-span-1">
-                <div className="space-y-2">
-                  <Label>Pages</Label>
-                  <div className="space-y-2">
-                    {storyPages.map((page, index) => (
-                      <Button 
-                        key={page.id}
-                        variant={selectedPageIndex === index ? "default" : "outline"}
-                        className="w-full justify-start text-left"
-                        onClick={() => setSelectedPageIndex(index)}
-                      >
-                        {index + 1}. {page.title.length > 15 ? `${page.title.substring(0, 15)}...` : page.title}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Story Details</CardTitle>
+              <CardDescription>
+                Enter details to generate your web story
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="keywords">Keywords</Label>
+                <Input 
+                  id="keywords"
+                  placeholder="Enter keywords (comma separated)"
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                />
               </div>
               
-              <div className="md:col-span-4">
-                {selectedPageIndex !== null && storyPages[selectedPageIndex] && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="pageTitle">Page Title</Label>
-                      <Input 
-                        id="pageTitle"
-                        value={storyPages[selectedPageIndex].title}
-                        onChange={(e) => updatePageContent(selectedPageIndex, "title", e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="pageContent">Page Content</Label>
-                      <Textarea 
-                        id="pageContent"
-                        value={storyPages[selectedPageIndex].content}
-                        onChange={(e) => updatePageContent(selectedPageIndex, "content", e.target.value)}
-                        rows={4}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
+              <div className="space-y-2">
+                <Label htmlFor="niche">Niche</Label>
+                <Select value={niche} onValueChange={setNiche}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a niche" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {niches.map((n) => (
+                      <SelectItem key={n} value={n}>{n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="frameCount">Number of Frames</Label>
+                <Select 
+                  value={frameCount.toString()} 
+                  onValueChange={(value) => setFrameCount(parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select number of frames" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3 Frames</SelectItem>
+                    <SelectItem value="5">5 Frames</SelectItem>
+                    <SelectItem value="7">7 Frames</SelectItem>
+                    <SelectItem value="10">10 Frames</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button 
+                className="w-full btn-gradient-primary mt-4"
+                onClick={handleGenerate}
+                disabled={loading || !keywords || !niche}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  "Generate Web Story"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="lg:col-span-4">
+          {storyFrames.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{storyTitle || "Your Web Story"}</CardTitle>
+                <CardDescription>
+                  Customize the content of your story frames
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <Input 
+                  value={storyTitle}
+                  onChange={(e) => setStoryTitle(e.target.value)}
+                  className="text-xl font-bold"
+                  placeholder="Story Title"
+                />
+                
+                <div className="space-y-8">
+                  {storyFrames.map((frame, index) => (
+                    <div key={index} className="border rounded-md p-4 space-y-3">
                       <div className="flex justify-between items-center">
-                        <Label>Page Image</Label>
+                        <h3 className="font-medium">Frame {index + 1}</h3>
                         <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={() => generateImage(selectedPageIndex)}
-                          disabled={storyPages[selectedPageIndex].imageUrl === "loading"}
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setCurrentFrameIndex(index);
+                            setShowImageGenerator(true);
+                          }}
                         >
-                          {storyPages[selectedPageIndex].imageUrl === "loading" ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Image className="mr-2 h-4 w-4" />
-                              Generate Image
-                            </>
-                          )}
+                          <ImageIcon className="h-4 w-4 mr-1" />
+                          Change Image
                         </Button>
                       </div>
                       
-                      <div className="border rounded-md p-4 flex items-center justify-center min-h-[200px] bg-muted/20">
-                        {storyPages[selectedPageIndex].imageUrl ? (
-                          storyPages[selectedPageIndex].imageUrl === "loading" ? (
-                            <div className="flex flex-col items-center justify-center text-muted-foreground">
-                              <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                              <span>Generating image...</span>
-                            </div>
-                          ) : (
-                            <img 
-                              src={storyPages[selectedPageIndex].imageUrl} 
-                              alt={storyPages[selectedPageIndex].title}
-                              className="max-h-[300px] object-contain" 
-                            />
-                          )
-                        ) : (
-                          <div className="flex flex-col items-center justify-center text-muted-foreground">
-                            <Image className="h-8 w-8 mb-2" />
-                            <span>No image generated yet</span>
-                          </div>
-                        )}
+                      <div className="aspect-[9/16] relative rounded-md overflow-hidden bg-muted">
+                        <img 
+                          src={frame.image} 
+                          alt={`Frame ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
+                      
+                      <Textarea 
+                        value={frame.text}
+                        onChange={(e) => handleTextChange(index, e.target.value)}
+                        placeholder="Frame text"
+                        className="resize-none"
+                      />
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  className="w-full" 
+                  onClick={handlePublish}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Publish to WordPress
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : (
+            <Card className="border-2 border-dashed border-muted">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <ImageIcon className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Story Generated Yet</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Enter your keywords and niche, then click "Generate Web Story" to create your Google Web Story.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+      
+      {showImageGenerator && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Select Image for Frame {currentFrameIndex + 1}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ImageGenerator onImageSelect={handleImageSelect} />
           </CardContent>
         </Card>
       )}

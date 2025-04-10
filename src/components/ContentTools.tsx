@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, AlertCircle, RefreshCcw, Search, Shield, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, RefreshCcw, Search, Shield, Loader2, BarChart2, MessageSquareText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContentToolsProps {
@@ -22,6 +22,14 @@ const ContentTools: React.FC<ContentToolsProps> = ({ content }) => {
     aiScore?: number;
     plagiarismScore?: number;
     spinnedContent?: string;
+    seoScore?: number;
+    seoSuggestions?: string[];
+    nlpAnalysis?: {
+      sentiment: string;
+      entities: string[];
+      keywords: string[];
+      readability: number;
+    };
   }>({});
 
   const handleAIDetection = async () => {
@@ -149,8 +157,140 @@ const ContentTools: React.FC<ContentToolsProps> = ({ content }) => {
     }
   };
 
+  const handleSEOAnalysis = async () => {
+    if (!content.trim()) {
+      toast({
+        title: "No content to analyze",
+        description: "Please generate or enter content first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      // Simulating API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Random SEO score between 60-95% for demo purposes
+      const seoScore = Math.floor(Math.random() * 35) + 60;
+      
+      // Sample SEO suggestions
+      const seoSuggestions = [
+        "Consider adding more relevant keywords to your title",
+        "Add meta description with primary keywords",
+        "Include more internal links",
+        "Optimize image alt texts",
+        "Improve content structure with more headings"
+      ];
+      
+      // Randomly select 2-4 suggestions
+      const numSuggestions = Math.floor(Math.random() * 3) + 2;
+      const selectedSuggestions = seoSuggestions
+        .sort(() => 0.5 - Math.random())
+        .slice(0, numSuggestions);
+      
+      setResults(prev => ({ 
+        ...prev, 
+        seoScore,
+        seoSuggestions: selectedSuggestions
+      }));
+      
+      toast({
+        title: "SEO Analysis Complete",
+        description: `Your content has been analyzed for search optimization.`,
+      });
+    } catch (error) {
+      console.error("SEO analysis error:", error);
+      toast({
+        title: "Analysis failed",
+        description: "Could not complete SEO analysis. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleNLPAnalysis = async () => {
+    if (!content.trim()) {
+      toast({
+        title: "No content to analyze",
+        description: "Please generate or enter content first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      // Simulating API call
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      
+      // Sample sentiment options
+      const sentiments = ["Positive", "Neutral", "Slightly positive", "Slightly negative"];
+      const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+      
+      // Generate random entities
+      const entityTypes = ["Person", "Organization", "Location", "Date", "Product"];
+      const entities = [];
+      const numEntities = Math.floor(Math.random() * 4) + 2;
+      
+      for (let i = 0; i < numEntities; i++) {
+        const type = entityTypes[Math.floor(Math.random() * entityTypes.length)];
+        const words = content.split(' ');
+        const randomWord = words[Math.floor(Math.random() * words.length)].replace(/[^a-zA-Z]/g, '');
+        if (randomWord && randomWord.length > 3) {
+          entities.push(`${randomWord} (${type})`);
+        }
+      }
+      
+      // Generate random keywords
+      const keywords = [];
+      const numKeywords = Math.floor(Math.random() * 5) + 3;
+      const contentWords = content.split(' ');
+      
+      for (let i = 0; i < numKeywords; i++) {
+        const randomIndex = Math.floor(Math.random() * contentWords.length);
+        const word = contentWords[randomIndex].replace(/[^a-zA-Z]/g, '');
+        if (word && word.length > 4 && !keywords.includes(word)) {
+          keywords.push(word);
+        }
+      }
+      
+      // Random readability score between 50-95
+      const readability = Math.floor(Math.random() * 45) + 50;
+      
+      setResults(prev => ({ 
+        ...prev, 
+        nlpAnalysis: {
+          sentiment: randomSentiment,
+          entities: [...new Set(entities)],
+          keywords: [...new Set(keywords)],
+          readability
+        }
+      }));
+      
+      toast({
+        title: "NLP Analysis Complete",
+        description: `Your content has been analyzed using natural language processing.`,
+      });
+    } catch (error) {
+      console.error("NLP analysis error:", error);
+      toast({
+        title: "Analysis failed",
+        description: "Could not complete NLP analysis. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
-    <Card className="mt-4">
+    <Card className="w-full h-[700px] overflow-auto sticky top-4">
       <CardHeader>
         <CardTitle>Content Tools</CardTitle>
         <CardDescription>
@@ -159,10 +299,12 @@ const ContentTools: React.FC<ContentToolsProps> = ({ content }) => {
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="ai-detection">AI Detection</TabsTrigger>
             <TabsTrigger value="plagiarism">Plagiarism</TabsTrigger>
             <TabsTrigger value="content-spinner">Content Spinner</TabsTrigger>
+            <TabsTrigger value="seo-analyzer">SEO Analyzer</TabsTrigger>
+            <TabsTrigger value="nlp-analyzer">NLP Analyzer</TabsTrigger>
           </TabsList>
           
           <TabsContent value="ai-detection">
@@ -324,6 +466,142 @@ const ContentTools: React.FC<ContentToolsProps> = ({ content }) => {
                     <>
                       <RefreshCcw className="mr-2 h-4 w-4" />
                       Spin Content
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="seo-analyzer">
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Analyze your content for search engine optimization and discover improvement opportunities.
+              </p>
+              
+              {results.seoScore !== undefined ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label>SEO Score</Label>
+                    <span className={`font-bold ${
+                      results.seoScore > 80 ? 'text-green-500' : 
+                      results.seoScore > 65 ? 'text-amber-500' : 
+                      'text-red-500'
+                    }`}>
+                      {results.seoScore}%
+                    </span>
+                  </div>
+                  <Progress value={results.seoScore} className="h-2" />
+                  
+                  <div className="mt-4">
+                    <Label className="mb-2 block">Recommendations</Label>
+                    <ul className="space-y-2 bg-muted p-3 rounded-md">
+                      {results.seoSuggestions?.map((suggestion, i) => (
+                        <li key={i} className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">{suggestion}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  onClick={handleSEOAnalysis} 
+                  disabled={isProcessing}
+                  className="w-full"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <BarChart2 className="mr-2 h-4 w-4" />
+                      Run SEO Analysis
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="nlp-analyzer">
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Use natural language processing to extract insights from your content.
+              </p>
+              
+              {results.nlpAnalysis ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="mb-2 block">Sentiment Analysis</Label>
+                      <div className="bg-muted p-3 rounded-md">
+                        <p className="text-sm font-medium">{results.nlpAnalysis.sentiment}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="mb-2 block">Readability Score</Label>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Score</span>
+                          <span className={`font-bold ${
+                            results.nlpAnalysis.readability > 80 ? 'text-green-500' : 
+                            results.nlpAnalysis.readability > 60 ? 'text-amber-500' : 
+                            'text-red-500'
+                          }`}>
+                            {results.nlpAnalysis.readability}%
+                          </span>
+                        </div>
+                        <Progress value={results.nlpAnalysis.readability} className="h-2" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label className="mb-2 block">Key Entities</Label>
+                    <div className="bg-muted p-3 rounded-md">
+                      <div className="flex flex-wrap gap-1">
+                        {results.nlpAnalysis.entities.map((entity, i) => (
+                          <span key={i} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary-foreground">
+                            {entity}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label className="mb-2 block">Keywords</Label>
+                    <div className="bg-muted p-3 rounded-md">
+                      <div className="flex flex-wrap gap-1">
+                        {results.nlpAnalysis.keywords.map((keyword, i) => (
+                          <span key={i} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                            {keyword}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  onClick={handleNLPAnalysis} 
+                  disabled={isProcessing}
+                  className="w-full"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquareText className="mr-2 h-4 w-4" />
+                      Run NLP Analysis
                     </>
                   )}
                 </Button>

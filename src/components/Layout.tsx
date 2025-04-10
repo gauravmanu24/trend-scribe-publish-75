@@ -23,13 +23,14 @@ const Layout = () => {
   
   const isFullWidth = fullWidthPages.includes(location.pathname);
   const isHomepage = location.pathname === "/";
+  const isAIWriter = location.pathname === "/ai-writer";
   
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <div className="flex flex-1">
         {!isFullWidth && (
-          <div className="w-64 hidden md:block">
+          <div className="w-64 hidden md:block sticky top-0 h-screen">
             <Navigation />
           </div>
         )}

@@ -40,8 +40,8 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-news-900 text-white p-4 h-full min-h-screen">
-      <div className="py-4">
+    <nav className="bg-news-900 text-white p-4 h-full">
+      <div className="py-4 sticky top-4">
         <ul className="space-y-2">
           {navItems.map((item) => (
             <li key={item.href}>
