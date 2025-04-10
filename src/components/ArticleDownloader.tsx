@@ -70,39 +70,44 @@ const ArticleDownloader: React.FC<ArticleDownloaderProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-2 mt-4">
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={downloadAsText}
-      >
-        <Download className="h-4 w-4 mr-2" />
-        Download as Text
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={downloadAsHTML}
-      >
-        <Download className="h-4 w-4 mr-2" />
-        Download as HTML
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={copyToClipboard}
-      >
-        <Clipboard className="h-4 w-4 mr-2" />
-        Copy to Clipboard
-      </Button>
+    <div className="flex flex-wrap gap-2 mt-4 justify-between">
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={downloadAsText}
+          className="text-gray-700"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Download as Text
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={downloadAsHTML}
+          className="text-gray-700"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Download as HTML
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={copyToClipboard}
+          className="text-gray-700"
+        >
+          <Clipboard className="h-4 w-4 mr-2" />
+          Copy to Clipboard
+        </Button>
+      </div>
       
       {onUseForAutomation && (
         <Button 
           size="sm"
           onClick={onUseForAutomation}
-          className="ml-auto"
+          className="bg-blue-600 hover:bg-blue-700"
         >
           <Send className="h-4 w-4 mr-2" />
           Use for Automation

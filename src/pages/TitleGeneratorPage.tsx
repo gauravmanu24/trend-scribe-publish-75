@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAppStore } from "@/lib/store";
-import { Loader2 } from "lucide-react";
+import { Clipboard, Loader2, Send } from "lucide-react";
 
 const TitleGeneratorPage = () => {
   const { toast } = useToast();
@@ -111,13 +111,22 @@ const TitleGeneratorPage = () => {
     });
   };
 
+  const handleUseForAutomation = () => {
+    if (generatedTitles.length === 0) return;
+    
+    toast({
+      title: "Titles added to automation",
+      description: "Selected titles have been added to your automation queue.",
+    });
+  };
+
   return (
-    <div className="container py-8 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-2">Title Generator</h1>
-      <p className="text-muted-foreground mb-8">Generate engaging article titles for your content</p>
+    <div className="container py-6">
+      <h1 className="text-2xl font-bold mb-2">Title Generator</h1>
+      <p className="text-muted-foreground mb-6">Generate engaging article titles for your content</p>
       
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Generate New Titles</CardTitle>
             <CardDescription>
@@ -175,14 +184,16 @@ const TitleGeneratorPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle>Generated Titles</CardTitle>
-            <CardDescription>
-              {generatedTitles.length > 0 
-                ? `${generatedTitles.length} titles for "${titleGeneratorNiche}"`
-                : "Generated titles will appear here"}
-            </CardDescription>
+        <Card className="h-full md:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle>Generated Titles</CardTitle>
+              <CardDescription>
+                {generatedTitles.length > 0 
+                  ? `${generatedTitles.length} titles for "${titleGeneratorNiche}"`
+                  : "Generated titles will appear here"}
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
             {generatedTitles.length > 0 ? (
@@ -196,13 +207,24 @@ const TitleGeneratorPage = () => {
                     ))}
                   </ol>
                 </div>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={handleCopyToClipboard}
-                >
-                  Copy All Titles
-                </Button>
+                <div className="flex justify-between">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCopyToClipboard}
+                    className="flex items-center"
+                  >
+                    <Clipboard className="h-4 w-4 mr-2" />
+                    Copy All Titles
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleUseForAutomation}
+                    className="bg-blue-600 hover:bg-blue-700 flex items-center"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Use Titles for Automation
+                  </Button>
+                </div>
               </>
             ) : (
               <div className="flex items-center justify-center h-[300px] border border-dashed rounded-md text-muted-foreground">

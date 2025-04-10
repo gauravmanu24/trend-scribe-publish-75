@@ -1,10 +1,8 @@
 
-import React, { useState } from "react";
-import { Newspaper, User, ChevronDown, LogIn, UserPlus, Menu, Settings, LogOut } from "lucide-react";
+import React from "react";
+import { Newspaper, User, ChevronDown, LogIn, UserPlus, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAppStore } from "@/lib/store";
-import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
@@ -22,8 +20,6 @@ import {
 
 const Header = () => {
   const navigate = useNavigate();
-  const isPolling = useAppStore((state) => state.isPolling);
-  const setPolling = useAppStore((state) => state.setPolling);
   const { user, signOut } = useAuth();
   
   const menuItems = [
@@ -36,11 +32,6 @@ const Header = () => {
   const handleLogout = async () => {
     await signOut();
     navigate('/');
-    
-    toast({
-      title: 'Logged out successfully',
-      description: 'You have been logged out of your account.'
-    });
   };
   
   const handleNavigation = (path: string) => {
@@ -48,12 +39,12 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white dark:bg-news-950 text-foreground shadow-md z-50">
-      <div className="container mx-auto px-4 py-3">
+    <header className="bg-white border-b border-gray-200 py-3">
+      <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/")}>
-            <Newspaper className="h-6 w-6 text-purples-500" />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purples-500 to-purples-700 bg-clip-text text-transparent">TrendScribe</h1>
+            <Newspaper className="h-6 w-6 text-blue-600" />
+            <h1 className="text-xl font-bold text-blue-600">TrendScribe</h1>
           </div>
           
           <nav className="hidden md:flex items-center space-x-6">
@@ -61,32 +52,14 @@ const Header = () => {
               <button 
                 key={item.label}
                 onClick={() => handleNavigation(item.href)}
-                className="text-foreground hover:text-purples-500 transition-colors"
+                className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium"
               >
                 {item.label}
               </button>
             ))}
           </nav>
           
-          <div className="flex items-center space-x-4">
-            {user && isPolling !== undefined && (
-              <div className={`hidden md:flex items-center ${isPolling ? "text-purples-400" : "text-gray-400"}`}>
-                <div className={`h-2 w-2 rounded-full mr-2 ${isPolling ? "bg-purples-400 animate-pulse-slow" : "bg-gray-400"}`}></div>
-                <span className="text-sm">{isPolling ? "Active" : "Paused"}</span>
-              </div>
-            )}
-            
-            {user && isPolling !== undefined && (
-              <Button
-                variant={isPolling ? "destructive" : "default"}
-                size="sm"
-                className="hidden md:flex"
-                onClick={() => setPolling(!isPolling)}
-              >
-                {isPolling ? "Pause Service" : "Start Service"}
-              </Button>
-            )}
-            
+          <div className="flex items-center space-x-2">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -100,24 +73,28 @@ const Header = () => {
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                     Dashboard
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/settings")}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden md:flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate("/auth")}
+                  className="rounded-sm border-gray-300 text-gray-700"
+                >
                   <LogIn className="h-4 w-4 mr-2" />
                   Login
                 </Button>
-                <Button variant="default" size="sm" onClick={() => navigate("/auth?tab=signup")} className="btn-gradient-purple">
+                <Button 
+                  size="sm" 
+                  onClick={() => navigate("/auth?tab=signup")} 
+                  className="bg-blue-600 hover:bg-blue-700 rounded-sm"
+                >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Sign Up
                 </Button>
@@ -152,40 +129,18 @@ const Header = () => {
                         </Button>
                       </SheetClose>
                       <SheetClose asChild>
-                        <Button className="btn-gradient-purple" onClick={() => navigate("/auth?tab=signup")}>
+                        <Button className="bg-blue-600" onClick={() => navigate("/auth?tab=signup")}>
                           <UserPlus className="h-4 w-4 mr-2" />
                           Sign Up
                         </Button>
                       </SheetClose>
                     </>
                   ) : (
-                    <>
-                      {isPolling !== undefined && (
-                        <Button 
-                          variant={isPolling ? "destructive" : "default"}
-                          onClick={() => setPolling(!isPolling)}
-                        >
-                          {isPolling ? "Pause Service" : "Start Service"}
-                        </Button>
-                      )}
-                      <SheetClose asChild>
-                        <Button variant="ghost" className="justify-start" onClick={() => navigate("/dashboard")}>
-                          Dashboard
-                        </Button>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <Button variant="ghost" className="justify-start" onClick={() => navigate("/settings")}>
-                          <Settings className="h-4 w-4 mr-2" />
-                          Settings
-                        </Button>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <Button variant="ghost" className="justify-start text-destructive" onClick={handleLogout}>
-                          <LogOut className="h-4 w-4 mr-2" />
-                          Logout
-                        </Button>
-                      </SheetClose>
-                    </>
+                    <SheetClose asChild>
+                      <Button variant="destructive" className="justify-start" onClick={handleLogout}>
+                        Logout
+                      </Button>
+                    </SheetClose>
                   )}
                 </div>
               </SheetContent>
