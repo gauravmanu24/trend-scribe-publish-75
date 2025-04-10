@@ -69,11 +69,12 @@ const AutomatedPublishing = () => {
   
   useEffect(() => {
     if (sources.length === 0) {
+      // Fix the type issue by explicitly typing as "manual" instead of string
       const initialSources: AutomationSource[] = [
         {
           id: uuidv4(),
           name: "Demo Manual Source",
-          type: "manual",
+          type: "manual", // Ensure this is the literal type, not just a string
           titles: ["The Future of AI in Content Creation", "10 Ways to Improve Your Website SEO", "Digital Marketing Trends for 2023"],
           createdAt: new Date().toISOString(),
           lastProcessed: null,
