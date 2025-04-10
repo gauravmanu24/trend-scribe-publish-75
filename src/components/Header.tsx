@@ -32,9 +32,7 @@ const Header = () => {
     { label: "Contact Us", href: "/contact" },
   ];
   
-  // Simulate checking for user authentication on component mount
   useEffect(() => {
-    // This would be replaced with actual authentication check
     const checkAuthState = () => {
       const savedAuth = localStorage.getItem('auth');
       if (savedAuth) {
@@ -60,7 +58,6 @@ const Header = () => {
     setUserProfile(null);
     navigate('/');
     
-    // Show success message via toast (using the imported toast function)
     toast({
       title: 'Logged out successfully',
       description: 'You have been logged out of your account.'
@@ -76,17 +73,16 @@ const Header = () => {
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/")}>
-            <Newspaper className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">TrendScribe</h1>
+            <Newspaper className="h-6 w-6 text-purples-500" />
+            <h1 className="text-xl font-bold bg-gradient-to-r from-purples-500 to-purples-700 bg-clip-text text-transparent">TrendScribe</h1>
           </div>
           
-          {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             {menuItems.map((item) => (
               <button 
                 key={item.label}
                 onClick={() => handleNavigation(item.href)}
-                className="text-foreground hover:text-primary transition-colors"
+                className="text-foreground hover:text-purples-500 transition-colors"
               >
                 {item.label}
               </button>
@@ -95,8 +91,8 @@ const Header = () => {
           
           <div className="flex items-center space-x-4">
             {isLoggedIn && (
-              <div className={`hidden md:flex items-center ${isPolling ? "text-green-400" : "text-gray-400"}`}>
-                <div className={`h-2 w-2 rounded-full mr-2 ${isPolling ? "bg-green-400 animate-pulse-slow" : "bg-gray-400"}`}></div>
+              <div className={`hidden md:flex items-center ${isPolling ? "text-purples-400" : "text-gray-400"}`}>
+                <div className={`h-2 w-2 rounded-full mr-2 ${isPolling ? "bg-purples-400 animate-pulse-slow" : "bg-gray-400"}`}></div>
                 <span className="text-sm">{isPolling ? "Active" : "Paused"}</span>
               </div>
             )}
@@ -112,7 +108,6 @@ const Header = () => {
               </Button>
             )}
             
-            {/* User menu */}
             {isLoggedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -143,14 +138,13 @@ const Header = () => {
                   <LogIn className="h-4 w-4 mr-2" />
                   Login
                 </Button>
-                <Button variant="default" size="sm" onClick={() => navigate("/signup")} className="btn-gradient-primary">
+                <Button variant="default" size="sm" onClick={() => navigate("/signup")} className="btn-gradient-purple">
                   <UserPlus className="h-4 w-4 mr-2" />
                   Sign Up
                 </Button>
               </div>
             )}
             
-            {/* Mobile menu trigger */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
@@ -179,7 +173,7 @@ const Header = () => {
                         </Button>
                       </SheetClose>
                       <SheetClose asChild>
-                        <Button className="btn-gradient-primary" onClick={() => navigate("/signup")}>
+                        <Button className="btn-gradient-purple" onClick={() => navigate("/signup")}>
                           <UserPlus className="h-4 w-4 mr-2" />
                           Sign Up
                         </Button>

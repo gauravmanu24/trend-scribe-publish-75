@@ -1,17 +1,49 @@
 
 /* Custom styles for the AI Writer page */
 .bg-dark-green {
-  background-color: #0a5035;
+  background-color: #1A1F2C;
   color: white;
 }
 
 /* Rich text editor styles for dark mode */
 .bg-dark-green .rich-editor {
-  background-color: #0c5c3d;
+  background-color: #262D40;
   color: white;
 }
 
 /* Button styles */
 .bg-dark-green button:not(.data-[state=active]) {
   color: white;
+}
+
+/* Purple accents */
+.accent-purple {
+  color: #9b87f5;
+}
+
+.bg-accent-purple {
+  background-color: #9b87f5;
+}
+
+.border-accent-purple {
+  border-color: #9b87f5;
+}
+
+.hover-accent-purple:hover {
+  background-color: #7E69AB;
+}
+
+/* Dark mode card styles */
+.card-dark {
+  background-color: #262D40;
+  border: 1px solid #3A3F51;
+}
+
+/* Button gradient */
+.btn-gradient-purple {
+  background: linear-gradient(to right, #9b87f5, #7E69AB);
+}
+
+.btn-gradient-purple:hover {
+  background: linear-gradient(to right, #7E69AB, #6E59A5);
 }

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
@@ -370,7 +369,7 @@ const AIWriterPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold text-center text-green-600 mb-6">AI Writer</h1>
+      <h1 className="text-4xl font-bold text-center text-purples-500 mb-6">AI Writer</h1>
       
       {!openRouterConfig.apiKey && modelType !== "external" && (
         <Alert variant="destructive" className="mb-6">
@@ -384,7 +383,7 @@ const AIWriterPage = () => {
       <div className="bg-gray-100 bg-opacity-50 rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <h2 className="text-2xl font-semibold text-green-600 mb-4">Article Details</h2>
+            <h2 className="text-2xl font-semibold text-purples-500 mb-4">Article Details</h2>
             <div className="bg-dark-green rounded-md p-6 h-[480px] overflow-y-auto">
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -394,7 +393,7 @@ const AIWriterPage = () => {
                     placeholder="Enter article title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="bg-white/10 border-green-700 text-white"
+                    className="bg-white/10 border-purples-600 text-white"
                   />
                 </div>
                 
@@ -405,7 +404,7 @@ const AIWriterPage = () => {
                     placeholder="Enter topic, keywords, or brief description"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    className="bg-white/10 border-green-700 text-white"
+                    className="bg-white/10 border-purples-600 text-white"
                   />
                 </div>
                 
@@ -427,11 +426,11 @@ const AIWriterPage = () => {
                     onValueChange={setModelType}
                     className="w-full"
                   >
-                    <TabsList className="grid grid-cols-4 w-full bg-green-900">
-                      <TabsTrigger value="predefined" className="data-[state=active]:bg-green-700">Predefined</TabsTrigger>
-                      <TabsTrigger value="free" className="data-[state=active]:bg-green-700">Free Models</TabsTrigger>
-                      <TabsTrigger value="custom" className="data-[state=active]:bg-green-700">Custom</TabsTrigger>
-                      <TabsTrigger value="external" className="data-[state=active]:bg-green-700">External APIs</TabsTrigger>
+                    <TabsList className="grid grid-cols-4 w-full bg-purples-900">
+                      <TabsTrigger value="predefined" className="data-[state=active]:bg-purples-700">Predefined</TabsTrigger>
+                      <TabsTrigger value="free" className="data-[state=active]:bg-purples-700">Free Models</TabsTrigger>
+                      <TabsTrigger value="custom" className="data-[state=active]:bg-purples-700">Custom</TabsTrigger>
+                      <TabsTrigger value="external" className="data-[state=active]:bg-purples-700">External APIs</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="predefined" className="space-y-2 mt-4">
@@ -440,7 +439,7 @@ const AIWriterPage = () => {
                         value={openRouterConfig.model} 
                         onValueChange={(value) => updateOpenRouterConfig({ model: value })}
                       >
-                        <SelectTrigger className="bg-white/10 border-green-700 text-white">
+                        <SelectTrigger className="bg-white/10 border-purples-600 text-white">
                           <SelectValue placeholder="Select AI model" />
                         </SelectTrigger>
                         <SelectContent>
@@ -548,7 +547,7 @@ const AIWriterPage = () => {
                       id="auto-publish" 
                       checked={autoPublish} 
                       onCheckedChange={(checked) => setAutoPublish(checked === true)}
-                      className="border-white data-[state=checked]:bg-green-600"
+                      className="border-white data-[state=checked]:bg-purples-600"
                     />
                     <Label htmlFor="auto-publish" className="text-white">Auto-publish to WordPress when saving</Label>
                   </div>
@@ -557,7 +556,7 @@ const AIWriterPage = () => {
                 <div className="pt-4">
                   <Button 
                     variant="outline"
-                    className="w-full mb-4 border-green-500 text-white hover:bg-green-700 hover:text-white" 
+                    className="w-full mb-4 border-purples-500 text-white hover:bg-purples-700 hover:text-white" 
                     onClick={() => setShowAiImageGenerator(true)}
                     disabled={loading}
                   >
@@ -566,7 +565,7 @@ const AIWriterPage = () => {
                   </Button>
                   
                   <Button 
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-purples-600 hover:bg-purples-700"
                     onClick={handleGenerate}
                     disabled={loading || !title || !topic || (modelType !== "external" && !openRouterConfig.apiKey)}
                   >
@@ -585,7 +584,7 @@ const AIWriterPage = () => {
           </div>
           
           <div>
-            <h2 className="text-2xl font-semibold text-green-600 mb-4">Generated Content</h2>
+            <h2 className="text-2xl font-semibold text-purples-500 mb-4">Generated Content</h2>
             <div className="bg-dark-green rounded-md p-6 h-[480px] flex flex-col">
               <div className="flex-grow overflow-auto mb-4">
                 <RichTextEditor 
@@ -600,14 +599,14 @@ const AIWriterPage = () => {
                   variant="outline" 
                   onClick={() => setGeneratedContent("")}
                   disabled={!generatedContent || loading}
-                  className="border-green-500 text-white hover:bg-green-700 hover:text-white"
+                  className="border-purples-500 text-white hover:bg-purples-700 hover:text-white"
                 >
                   Clear
                 </Button>
                 <Button 
                   onClick={handleSave}
                   disabled={!generatedContent || loading}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-purples-600 hover:bg-purples-700"
                 >
                   {loading ? (
                     <>
@@ -627,8 +626,8 @@ const AIWriterPage = () => {
         </div>
         
         <div>
-          <h2 className="text-2xl font-semibold text-green-600 text-center mb-2">Content Tools</h2>
-          <p className="text-center text-green-600 mb-4">Analyze and improve your content with these tools</p>
+          <h2 className="text-2xl font-semibold text-purples-500 text-center mb-2">Content Tools</h2>
+          <p className="text-center text-purples-500 mb-4">Analyze and improve your content with these tools</p>
           <div className="bg-dark-green rounded-md p-6 h-[350px] overflow-auto">
             <ContentTools content={generatedContent} />
           </div>
@@ -650,7 +649,7 @@ const AIWriterPage = () => {
           <Button 
             variant="outline" 
             onClick={() => setShowImageGenerator(true)}
-            className="w-full mt-6 border-green-500 text-green-600 hover:bg-green-700 hover:text-white"
+            className="w-full mt-6 border-purples-500 text-purples-600 hover:bg-purples-700 hover:text-white"
           >
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Image
