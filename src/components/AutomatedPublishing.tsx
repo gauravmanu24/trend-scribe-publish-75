@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Clock, RefreshCw, MoreHorizontal, AlertCircle, X, Plus, Loader2, Play, PlusCircle } from "lucide-react";
+import { Check, Clock, RefreshCw, MoreHorizontal, AlertCircle, X, Plus, Loader2, Play, PlusCircle, Upload, FileText, FileSpreadsheet } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { format } from "date-fns";
 import { useAppStore } from "@/lib/store";
@@ -38,7 +38,7 @@ const AutomatedPublishing = () => {
   const openRouterConfig = useAppStore((state) => state.openRouterConfig);
   
   const [newSourceName, setNewSourceName] = useState("");
-  const [newSourceType, setNewSourceType] = useState<"rss" | "sheets" | "manual">("manual");
+  const [newSourceType, setNewSourceType] = useState<"rss" | "sheets" | "manual" | "file" | "title-generator">("manual");
   const [newSourceUrl, setNewSourceUrl] = useState("");
   const [newSourceTitles, setNewSourceTitles] = useState("");
   const [isAddingSource, setIsAddingSource] = useState(false);
@@ -48,7 +48,13 @@ const AutomatedPublishing = () => {
   const [tone, setTone] = useState("professional");
   const [wordCount, setWordCount] = useState("800");
   const [category, setCategory] = useState("general");
-  const [defaultPrompt, setDefaultPrompt] = useState(
+  const [fileType, setFileType] = useState<"txt" | "excel" | "csv">("txt");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isTitleGenerating, setIsTitleGenerating] = useState(false);
+  const [titleGeneratorNiche, setTitleGeneratorNiche] = useState("");
+  const [generatedTitles, setGeneratedTitles] = useState<string[]>([]);
+  const [titleCount, setTitleCount] = useState<string>("10");
+  const [customPrompt, setCustomPrompt] = useState(
     "Write a comprehensive, well-researched article with the following title: '{TITLE}'. Format your response with proper HTML tags including h2, h3 for headings, <ul> and <li> for lists, and <p> tags for paragraphs. The article should be informative, factual, and engaging for readers."
   );
   const [activeTab, setActiveTab] = useState("sources");
@@ -106,6 +112,15 @@ const AutomatedPublishing = () => {
       });
       return;
     }
+
+    if (newSourceType === "file" && !uploadedFile) {
+      toast({
+        title: "File required",
+        description: "Please upload a file with article titles.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const titles = newSourceType === "manual" ? newSourceTitles.split("\n").filter(t => t.trim()) : undefined;
     
@@ -121,12 +136,53 @@ const AutomatedPublishing = () => {
     setIsAddingSource(true);
     
     try {
+      let processedTitles = titles;
+
+      // Process uploaded file if file source type is selected
+      if (newSourceType === "file" && uploadedFile) {
+        processFileForTitles(uploadedFile).then(extractedTitles => {
+          if (extractedTitles && extractedTitles.length > 0) {
+            const newSource: AutomationSource = {
+              id: uuidv4(),
+              name: newSourceName,
+              type: "manual", // We convert file to manual after processing
+              titles: extractedTitles,
+              createdAt: new Date().toISOString(),
+              lastProcessed: null,
+              isActive: true,
+            };
+            
+            setSources([...sources, newSource]);
+            
+            toast({
+              title: "Source added from file",
+              description: `${newSourceName} with ${extractedTitles.length} titles has been added.`,
+            });
+          } else {
+            toast({
+              title: "No titles found",
+              description: "Could not extract any titles from the uploaded file.",
+              variant: "destructive",
+            });
+          }
+          
+          // Clear form
+          setNewSourceName("");
+          setNewSourceType("manual");
+          setNewSourceUrl("");
+          setNewSourceTitles("");
+          setUploadedFile(null);
+          setIsAddingSource(false);
+        });
+        return;
+      }
+      
       const newSource: AutomationSource = {
         id: uuidv4(),
         name: newSourceName,
         type: newSourceType,
         url: newSourceType === "rss" ? newSourceUrl : undefined,
-        titles: newSourceType === "manual" ? titles : undefined,
+        titles: processedTitles,
         createdAt: new Date().toISOString(),
         lastProcessed: null,
         isActive: true,
@@ -139,6 +195,7 @@ const AutomatedPublishing = () => {
       setNewSourceType("manual");
       setNewSourceUrl("");
       setNewSourceTitles("");
+      setUploadedFile(null);
       
       toast({
         title: "Source added",
@@ -154,6 +211,144 @@ const AutomatedPublishing = () => {
     } finally {
       setIsAddingSource(false);
     }
+  };
+
+  const processFileForTitles = async (file: File): Promise<string[] | null> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        if (!content) {
+          resolve(null);
+          return;
+        }
+        
+        let titles: string[] = [];
+        
+        if (file.name.endsWith('.txt')) {
+          // Process text file - split by newlines
+          titles = content.split(/\r?\n/).filter(line => line.trim().length > 0);
+        } else if (file.name.endsWith('.csv')) {
+          // Simple CSV processing - assuming one title per line
+          titles = content.split(/\r?\n/).filter(line => line.trim().length > 0);
+        }
+        // For Excel files, we'd need a library like SheetJS, but for demo we'll show a message
+        
+        resolve(titles);
+      };
+      
+      reader.onerror = () => {
+        resolve(null);
+      };
+      
+      if (file.name.endsWith('.txt') || file.name.endsWith('.csv')) {
+        reader.readAsText(file);
+      } else {
+        toast({
+          title: "Unsupported file format",
+          description: "Only .txt and .csv files are supported currently.",
+          variant: "destructive",
+        });
+        resolve(null);
+      }
+    });
+  };
+
+  const generateTitles = async () => {
+    if (!titleGeneratorNiche) {
+      toast({
+        title: "Niche required",
+        description: "Please specify a niche for title generation.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!openRouterConfig.apiKey) {
+      toast({
+        title: "OpenRouter API key missing",
+        description: "Please configure your OpenRouter API key in settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTitleGenerating(true);
+    try {
+      const count = parseInt(titleCount) || 10;
+      const modelToUse = openRouterConfig.model || "meta-llama/llama-3.1-8b-instruct";
+      
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openRouterConfig.apiKey}`,
+          "HTTP-Referer": window.location.origin,
+        },
+        body: JSON.stringify({
+          model: modelToUse,
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional content strategist who creates engaging, clickable article titles."
+            },
+            {
+              role: "user",
+              content: `Generate ${count} unique, engaging, and SEO-friendly article titles for the ${titleGeneratorNiche} niche. Format the output as a numbered list.`
+            }
+          ],
+          temperature: 0.8,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+      
+      if (content) {
+        // Extract titles from numbered list format
+        const extractedTitles = content
+          .split(/\d+\.\s+/)
+          .map(line => line.trim())
+          .filter(line => line.length > 0);
+          
+        setGeneratedTitles(extractedTitles);
+        
+        toast({
+          title: "Titles generated",
+          description: `Generated ${extractedTitles.length} titles for ${titleGeneratorNiche} niche.`,
+        });
+      } else {
+        throw new Error("No content returned from API");
+      }
+    } catch (error) {
+      console.error("Title generation error:", error);
+      toast({
+        title: "Title generation failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTitleGenerating(false);
+    }
+  };
+
+  const useGeneratedTitles = () => {
+    if (generatedTitles.length === 0) return;
+    
+    setNewSourceType("manual");
+    setNewSourceName(`${titleGeneratorNiche} Titles`);
+    setNewSourceTitles(generatedTitles.join("\n"));
+    setActiveTab("sources");
+    
+    toast({
+      title: "Titles added to source",
+      description: `${generatedTitles.length} titles added to the new source form.`,
+    });
   };
   
   const processAutomation = async () => {
@@ -265,8 +460,8 @@ const AutomatedPublishing = () => {
 
       const now = new Date().toISOString();
       
-      // Prepare prompt using the default prompt template
-      let prompt = defaultPrompt.replace('{TITLE}', title);
+      // Prepare prompt using the custom prompt template
+      let prompt = customPrompt.replace('{TITLE}', title);
       
       // Add language instruction
       if (language === "hi") {
@@ -380,6 +575,19 @@ const AutomatedPublishing = () => {
       setPollingInterval(value);
     }
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      // Extract just the filename to display
+      const fileName = file.name;
+      toast({
+        title: "File uploaded",
+        description: `${fileName} has been uploaded.`,
+      });
+    }
+  };
   
   return (
     <div className="space-y-8">
@@ -442,9 +650,10 @@ const AutomatedPublishing = () => {
       )}
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="sources">Sources</TabsTrigger>
           <TabsTrigger value="default">Default Settings</TabsTrigger>
+          <TabsTrigger value="title-generator">Title Generator</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
         
@@ -545,6 +754,7 @@ const AutomatedPublishing = () => {
                         <SelectItem value="manual">Manual Titles</SelectItem>
                         <SelectItem value="rss">RSS Feed</SelectItem>
                         <SelectItem value="sheets">Google Sheets</SelectItem>
+                        <SelectItem value="file">Upload File</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -574,6 +784,91 @@ const AutomatedPublishing = () => {
                       <p className="text-xs text-muted-foreground">
                         Enter one article title per line.
                       </p>
+                    </div>
+                  )}
+
+                  {newSourceType === "file" && (
+                    <div className="grid gap-2">
+                      <Label>Upload Titles File</Label>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFileType("txt")}
+                            className={fileType === "txt" ? "bg-primary/10" : ""}
+                          >
+                            <FileText className="h-4 w-4 mr-1" /> TXT File
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFileType("csv")}
+                            className={fileType === "csv" ? "bg-primary/10" : ""}
+                          >
+                            <FileText className="h-4 w-4 mr-1" /> CSV File
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFileType("excel")}
+                            className={fileType === "excel" ? "bg-primary/10" : ""}
+                          >
+                            <FileSpreadsheet className="h-4 w-4 mr-1" /> Excel File
+                          </Button>
+                        </div>
+                        
+                        <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
+                          <Label 
+                            htmlFor="file-upload"
+                            className="cursor-pointer flex flex-col items-center justify-center"
+                          >
+                            <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                            <p className="text-sm font-medium">
+                              Click to upload or drag and drop
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {fileType === "txt" ? "Text files (.txt)" : 
+                              fileType === "csv" ? "CSV files (.csv)" : 
+                              "Excel files (.xlsx, .xls)"}
+                            </p>
+                          </Label>
+                          <Input 
+                            type="file" 
+                            id="file-upload"
+                            className="hidden"
+                            accept={
+                              fileType === "txt" ? ".txt" : 
+                              fileType === "csv" ? ".csv" : 
+                              ".xlsx,.xls"
+                            }
+                            onChange={handleFileChange}
+                          />
+                        </div>
+                        
+                        {uploadedFile && (
+                          <div className="flex items-center justify-between p-2 border rounded-md bg-background">
+                            <div className="flex items-center gap-2 text-sm">
+                              {fileType === "txt" ? (
+                                <FileText className="h-4 w-4 text-blue-500" />
+                              ) : fileType === "csv" ? (
+                                <FileText className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                              )}
+                              <span className="truncate max-w-[200px]">{uploadedFile.name}</span>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setUploadedFile(null)}
+                              className="h-8 w-8 p-0 text-muted-foreground"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -673,12 +968,12 @@ const AutomatedPublishing = () => {
               </div>
               
               <div className="grid gap-3">
-                <Label htmlFor="default-prompt">Default Generation Prompt</Label>
+                <Label htmlFor="default-prompt">Custom Generation Prompt</Label>
                 <Textarea 
                   id="default-prompt"
                   placeholder="Write a comprehensive article about {TITLE}..." 
-                  value={defaultPrompt}
-                  onChange={(e) => setDefaultPrompt(e.target.value)}
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
                   rows={5}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -699,6 +994,78 @@ const AutomatedPublishing = () => {
                 <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200 flex gap-2 text-yellow-800">
                   <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
                   <p className="text-sm">WordPress is not configured. Please check your settings.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="title-generator" className="pt-6">
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle>Title Generator</CardTitle>
+              <CardDescription>
+                Generate multiple article titles for a specific niche
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid gap-3">
+                  <Label htmlFor="niche">Niche/Topic</Label>
+                  <Input
+                    id="niche"
+                    placeholder="e.g., Digital Marketing, Health & Wellness, etc."
+                    value={titleGeneratorNiche}
+                    onChange={(e) => setTitleGeneratorNiche(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <Label htmlFor="title-count">Number of Titles</Label>
+                  <Select value={titleCount} onValueChange={setTitleCount}>
+                    <SelectTrigger id="title-count">
+                      <SelectValue placeholder="Select count" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 Titles</SelectItem>
+                      <SelectItem value="10">10 Titles</SelectItem>
+                      <SelectItem value="25">25 Titles</SelectItem>
+                      <SelectItem value="50">50 Titles</SelectItem>
+                      <SelectItem value="100">100 Titles</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Button 
+                className="w-full" 
+                onClick={generateTitles}
+                disabled={isTitleGenerating || !openRouterConfig.apiKey || !titleGeneratorNiche}
+              >
+                {isTitleGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Titles...
+                  </>
+                ) : (
+                  "Generate Titles"
+                )}
+              </Button>
+
+              {generatedTitles.length > 0 && (
+                <div className="border rounded-md p-4 mt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">Generated Titles ({generatedTitles.length})</h3>
+                    <Button variant="outline" size="sm" onClick={useGeneratedTitles}>
+                      Use These Titles
+                    </Button>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto space-y-1">
+                    {generatedTitles.map((title, index) => (
+                      <div key={index} className="text-sm p-2 rounded odd:bg-muted/50">
+                        {index + 1}. {title}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>

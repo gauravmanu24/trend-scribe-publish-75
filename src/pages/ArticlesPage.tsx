@@ -7,7 +7,7 @@ import { useAppStore } from "@/lib/store";
 import ArticleCard from "@/components/ArticleCard";
 import ArticleDialog from "@/components/ArticleDialog";
 import { Article } from "@/types";
-import { Search, PlusCircle, Settings, ArrowUpDown } from "lucide-react";
+import { Search, PlusCircle, Settings, ArrowUpDown, Book, FileSpreadsheet } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import AutomatedPublishing from "@/components/AutomatedPublishing";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -142,14 +142,25 @@ const ArticlesPage = () => {
                 </Select>
               </div>
               
-              <Button 
-                variant="default" 
-                className="whitespace-nowrap"
-                onClick={() => navigate("/ai-writer")}
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Article
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="default" 
+                  className="whitespace-nowrap"
+                  onClick={() => navigate("/ai-writer")}
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  New Article
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="whitespace-nowrap"
+                  onClick={() => navigate("/web-story-generator")}
+                >
+                  <Book className="h-4 w-4 mr-2" />
+                  Web Story
+                </Button>
+              </div>
             </div>
           </div>
           
