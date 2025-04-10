@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useInterval } from "@/hooks/useInterval";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,12 +68,12 @@ const AutomatedPublishing = () => {
   
   useEffect(() => {
     if (sources.length === 0) {
-      // Fix the type issue by explicitly typing as "manual" instead of string
+      // Create a properly typed automation source
       const initialSources: AutomationSource[] = [
         {
           id: uuidv4(),
           name: "Demo Manual Source",
-          type: "manual", // Ensure this is the literal type, not just a string
+          type: "manual" as const, // Use 'as const' to ensure correct typing
           titles: ["The Future of AI in Content Creation", "10 Ways to Improve Your Website SEO", "Digital Marketing Trends for 2023"],
           createdAt: new Date().toISOString(),
           lastProcessed: null,
@@ -149,13 +148,13 @@ const AutomatedPublishing = () => {
         processFileForTitles(uploadedFile).then(extractedTitles => {
           if (extractedTitles && extractedTitles.length > 0) {
             if (isEditingSource && editSourceId) {
-              // Update existing source
+              // Update existing source with correct typing
               const updatedSources = sources.map(source => {
                 if (source.id === editSourceId) {
                   return {
                     ...source,
                     name: newSourceName,
-                    type: "manual",
+                    type: "manual" as const, // Use 'as const' for proper type
                     titles: extractedTitles,
                   };
                 }
@@ -169,11 +168,11 @@ const AutomatedPublishing = () => {
                 description: `${newSourceName} has been updated with ${extractedTitles.length} titles.`,
               });
             } else {
-              // Add new source
+              // Add new source with correct typing
               const newSource: AutomationSource = {
                 id: uuidv4(),
                 name: newSourceName,
-                type: "manual",
+                type: "manual" as const, // Use 'as const' for proper type
                 titles: extractedTitles,
                 createdAt: new Date().toISOString(),
                 lastProcessed: null,
@@ -201,13 +200,13 @@ const AutomatedPublishing = () => {
       }
       
       if (isEditingSource && editSourceId) {
-        // Update existing source
+        // Update existing source with correct typing
         const updatedSources = sources.map(source => {
           if (source.id === editSourceId) {
             return {
               ...source,
               name: newSourceName,
-              type: newSourceType,
+              type: newSourceType, // This is already correctly typed from the state
               url: newSourceType === "rss" ? newSourceUrl : undefined,
               titles: processedTitles,
             };
@@ -222,11 +221,11 @@ const AutomatedPublishing = () => {
           description: `${newSourceName} has been updated.`,
         });
       } else {
-        // Add new source
+        // Add new source with correct typing
         const newSource: AutomationSource = {
           id: uuidv4(),
           name: newSourceName,
-          type: newSourceType,
+          type: newSourceType, // This is already correctly typed from the state
           url: newSourceType === "rss" ? newSourceUrl : undefined,
           titles: processedTitles,
           createdAt: new Date().toISOString(),
@@ -907,202 +906,3 @@ const AutomatedPublishing = () => {
                       </>
                     ) : (
                       isEditingSource ? "Update Source" : "Add Source"
-                    )}
-                  </Button>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>
-            
-            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete this source and cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteSource} className="bg-red-600 hover:bg-red-700">
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="default" className="pt-6">
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle>Default Article Settings</CardTitle>
-              <CardDescription>
-                Configure default settings for automatically generated articles
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="grid gap-3">
-                  <Label htmlFor="default-tone">Default Tone</Label>
-                  <Select value={tone} onValueChange={setTone}>
-                    <SelectTrigger id="default-tone">
-                      <SelectValue placeholder="Select tone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="casual">Casual</SelectItem>
-                      <SelectItem value="friendly">Friendly</SelectItem>
-                      <SelectItem value="authoritative">Authoritative</SelectItem>
-                      <SelectItem value="humorous">Humorous</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-3">
-                  <Label htmlFor="default-language">Default Language</Label>
-                  <Select value={language} onValueChange={setLanguage}>
-                    <SelectTrigger id="default-language">
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="hi">Hindi</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="grid gap-3">
-                  <Label htmlFor="default-word-count">Default Word Count</Label>
-                  <Input
-                    id="default-word-count"
-                    type="number"
-                    min="200"
-                    value={wordCount}
-                    onChange={(e) => setWordCount(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-3">
-                  <Label htmlFor="default-category">Default Category</Label>
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger id="default-category">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="business">Business</SelectItem>
-                      <SelectItem value="health">Health</SelectItem>
-                      <SelectItem value="lifestyle">Lifestyle</SelectItem>
-                      <SelectItem value="news">News</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid gap-3">
-                <Label htmlFor="default-prompt">Custom Generation Prompt</Label>
-                <Textarea 
-                  id="default-prompt"
-                  placeholder="Write a comprehensive article about {TITLE}..." 
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                  rows={5}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Use {'{TITLE}'} as a placeholder for the article title in your prompt.
-                </p>
-              </div>
-              
-              <div className="flex items-center space-x-2 pt-2">
-                <Switch 
-                  id="auto-publish" 
-                  checked={autoPublish} 
-                  onCheckedChange={setAutoPublish}
-                />
-                <Label htmlFor="auto-publish">Automatically publish to WordPress</Label>
-              </div>
-              
-              {autoPublish && !wordPressConfig.isConnected && (
-                <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200 flex gap-2 text-yellow-800">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
-                  <p className="text-sm">WordPress is not configured. Please check your settings.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="logs" className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Activity Logs</h3>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={clearLogs}
-              disabled={logs.length === 0}
-            >
-              Clear Logs
-            </Button>
-          </div>
-          
-          <div className="border rounded-lg overflow-hidden">
-            {logs.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                <p>No activity logs to display.</p>
-                <p className="text-sm">Run automation to generate logs.</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Status</TableHead>
-                    <TableHead>Activity</TableHead>
-                    <TableHead className="text-right">Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[...logs].reverse().slice(0, 10).map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>
-                        {log.status === "success" ? (
-                          <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">
-                            <Check className="mr-1 h-3 w-3" />
-                            Success
-                          </Badge>
-                        ) : log.status === "processing" ? (
-                          <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
-                            <Clock className="mr-1 h-3 w-3" />
-                            Processing
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-red-50 text-red-800 border-red-200">
-                            <AlertCircle className="mr-1 h-3 w-3" />
-                            Failed
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        <div className="text-sm font-medium">{log.title}</div>
-                        <div className="text-xs text-muted-foreground">{log.sourceName}</div>
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap text-sm">
-                        {format(new Date(log.timestamp), "h:mm a")}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
-
-export default AutomatedPublishing;
