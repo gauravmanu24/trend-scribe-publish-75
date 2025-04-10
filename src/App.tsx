@@ -24,7 +24,6 @@ import TermsPage from "./pages/TermsPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import AuthPage from "./pages/AuthPage";
 import TitleGeneratorPage from "./pages/TitleGeneratorPage";
-import Header from "./components/Header";
 import Footer from "./components/Footer";
 import React from "react";
 
@@ -42,10 +41,9 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <Routes>
-                {/* Public Routes with Header and Footer */}
+                {/* Public Routes - Header now only included in Layout component */}
                 <Route path="/" element={
                   <>
-                    <Header />
                     <div className="min-h-[calc(100vh-64px)]">
                       <Index />
                     </div>
@@ -54,7 +52,6 @@ const App = () => {
                 } />
                 <Route path="/about" element={
                   <>
-                    <Header />
                     <div className="min-h-[calc(100vh-64px)]">
                       <AboutUsPage />
                     </div>
@@ -63,7 +60,6 @@ const App = () => {
                 } />
                 <Route path="/contact" element={
                   <>
-                    <Header />
                     <div className="min-h-[calc(100vh-64px)]">
                       <ContactUsPage />
                     </div>
@@ -72,7 +68,6 @@ const App = () => {
                 } />
                 <Route path="/privacy" element={
                   <>
-                    <Header />
                     <div className="min-h-[calc(100vh-64px)]">
                       <PrivacyPolicyPage />
                     </div>
@@ -81,7 +76,6 @@ const App = () => {
                 } />
                 <Route path="/terms" element={
                   <>
-                    <Header />
                     <div className="min-h-[calc(100vh-64px)]">
                       <TermsPage />
                     </div>
@@ -90,7 +84,6 @@ const App = () => {
                 } />
                 <Route path="/features" element={
                   <>
-                    <Header />
                     <div className="min-h-[calc(100vh-64px)]">
                       <FeaturesPage />
                     </div>
@@ -99,7 +92,6 @@ const App = () => {
                 } />
                 <Route path="/auth" element={
                   <>
-                    <Header />
                     <div className="min-h-[calc(100vh-64px)]">
                       <AuthPage />
                     </div>
