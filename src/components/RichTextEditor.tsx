@@ -5,14 +5,16 @@ import {
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, 
   List, ListOrdered, Quote, Heading1, Heading2, Heading3, Image, Link, Undo, Redo 
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   onImageRequest: () => void;
+  className?: string; // Added className as optional prop
 }
 
-const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImageRequest }) => {
+const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImageRequest, className }) => {
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   
   const handleButtonClick = (action: string, tag: string = "") => {
@@ -108,7 +110,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImag
   };
   
   return (
-    <div className="border rounded-md">
+    <div className={cn("border rounded-md", className)}>
       <div className="bg-muted/50 p-2 border-b flex flex-wrap gap-1">
         <Button variant="ghost" size="icon" onClick={() => handleButtonClick("format", "b")}>
           <Bold className="h-4 w-4" />
