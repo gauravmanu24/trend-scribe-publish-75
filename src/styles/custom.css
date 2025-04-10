@@ -5,6 +5,11 @@
   color: #333;
 }
 
+.dark .bg-ai-writer {
+  background-color: #1A1F2C;
+  color: #e0e0e0;
+}
+
 /* Panel backgrounds */
 .panel-bg {
   background-color: white;
@@ -13,10 +18,21 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+.dark .panel-bg {
+  background-color: #222222;
+  border-color: #333333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
 /* Rich text editor styles */
 .panel-bg .rich-editor {
   background-color: white;
   color: #333;
+}
+
+.dark .panel-bg .rich-editor {
+  background-color: #222222;
+  color: #e0e0e0;
 }
 
 /* Blue accent color from the AI Writer design */
@@ -24,16 +40,32 @@
   color: #3B82F6;
 }
 
+.dark .accent-blue {
+  color: #60a5fa;
+}
+
 .bg-accent-blue {
   background-color: #3B82F6;
+}
+
+.dark .bg-accent-blue {
+  background-color: #60a5fa;
 }
 
 .border-accent-blue {
   border-color: #3B82F6;
 }
 
+.dark .border-accent-blue {
+  border-color: #60a5fa;
+}
+
 .hover-accent-blue:hover {
   background-color: #2563EB;
+}
+
+.dark .hover-accent-blue:hover {
+  background-color: #3b82f6;
 }
 
 /* Button styles */
@@ -45,6 +77,14 @@
 
 .btn-blue:hover {
   background-color: #2563EB;
+}
+
+.dark .btn-blue {
+  background-color: #3B82F6;
+}
+
+.dark .btn-blue:hover {
+  background-color: #60a5fa;
 }
 
 .btn-outline-blue {
@@ -59,11 +99,27 @@
   color: white;
 }
 
+.dark .btn-outline-blue {
+  border: 1px solid #60a5fa;
+  color: #60a5fa;
+}
+
+.dark .btn-outline-blue:hover {
+  background-color: #3B82F6;
+  color: white;
+}
+
 /* Form controls */
 .form-input {
   border: 1px solid #e5e7eb;
   border-radius: 0.375rem;
   padding: 0.5rem 0.75rem;
+}
+
+.dark .form-input {
+  background-color: #333;
+  border-color: #444;
+  color: #e0e0e0;
 }
 
 .form-input:focus {
@@ -72,10 +128,19 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
+.dark .form-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+}
+
 /* AI Writer specific styles */
 .ai-writer-heading {
   color: #1F2937;
   font-weight: 700;
+}
+
+.dark .ai-writer-heading {
+  color: #e0e0e0;
 }
 
 .ai-writer-card {
@@ -85,9 +150,18 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+.dark .ai-writer-card {
+  background-color: #222222;
+  border-color: #333333;
+}
+
 .ai-writer-tabs {
   background-color: #F3F4F6;
   border-radius: 0.375rem;
+}
+
+.dark .ai-writer-tabs {
+  background-color: #333333;
 }
 
 .ai-writer-tab {
@@ -100,4 +174,8 @@
   background-color: #3B82F6;
   color: white;
   border-radius: 0.375rem;
+}
+
+.dark .ai-writer-tab.active {
+  background-color: #60a5fa;
 }

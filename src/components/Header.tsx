@@ -39,12 +39,12 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 py-3">
+    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 py-3">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/")}>
-            <Newspaper className="h-6 w-6 text-blue-600" />
-            <h1 className="text-xl font-bold text-blue-600">TrendScribe</h1>
+            <Newspaper className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">TrendScribe</h1>
           </div>
           
           <nav className="hidden md:flex items-center space-x-6">
@@ -52,7 +52,7 @@ const Header = () => {
               <button 
                 key={item.label}
                 onClick={() => handleNavigation(item.href)}
-                className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium"
+                className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm font-medium"
               >
                 {item.label}
               </button>
@@ -69,7 +69,7 @@ const Header = () => {
                     <ChevronDown className="h-4 w-4 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-900">
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                     Dashboard
                   </DropdownMenuItem>
@@ -85,7 +85,7 @@ const Header = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={() => navigate("/auth")}
-                  className="rounded-sm border-gray-300 text-gray-700"
+                  className="rounded-sm border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300"
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   Login
@@ -93,7 +93,7 @@ const Header = () => {
                 <Button 
                   size="sm" 
                   onClick={() => navigate("/auth?tab=signup")} 
-                  className="bg-blue-600 hover:bg-blue-700 rounded-sm"
+                  className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 rounded-sm"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Sign Up
@@ -107,13 +107,13 @@ const Header = () => {
                   <Menu />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right">
+              <SheetContent side="right" className="bg-white dark:bg-gray-900">
                 <div className="flex flex-col space-y-4 mt-8">
                   {menuItems.map((item) => (
                     <SheetClose key={item.label} asChild>
                       <Button 
                         variant="ghost" 
-                        className="justify-start"
+                        className="justify-start dark:text-gray-300 dark:hover:bg-gray-800"
                         onClick={() => handleNavigation(item.href)}
                       >
                         {item.label}
@@ -123,13 +123,13 @@ const Header = () => {
                   {!user ? (
                     <>
                       <SheetClose asChild>
-                        <Button variant="outline" onClick={() => navigate("/auth")}>
+                        <Button variant="outline" onClick={() => navigate("/auth")} className="dark:text-gray-300 dark:border-gray-700">
                           <LogIn className="h-4 w-4 mr-2" />
                           Login
                         </Button>
                       </SheetClose>
                       <SheetClose asChild>
-                        <Button className="bg-blue-600" onClick={() => navigate("/auth?tab=signup")}>
+                        <Button className="bg-blue-600 dark:bg-blue-700" onClick={() => navigate("/auth?tab=signup")}>
                           <UserPlus className="h-4 w-4 mr-2" />
                           Sign Up
                         </Button>
