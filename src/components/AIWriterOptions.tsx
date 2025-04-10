@@ -28,9 +28,9 @@ const AIWriterOptions: React.FC<AIWriterOptionsProps> = ({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="tone">Tone</Label>
+        <Label htmlFor="tone" className="text-gray-700">Tone</Label>
         <Select value={tone} onValueChange={setTone}>
-          <SelectTrigger id="tone">
+          <SelectTrigger id="tone" className="border-gray-300 focus:border-blue-500">
             <SelectValue placeholder="Select tone" />
           </SelectTrigger>
           <SelectContent>
@@ -45,9 +45,9 @@ const AIWriterOptions: React.FC<AIWriterOptionsProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="language">Language</Label>
+        <Label htmlFor="language" className="text-gray-700">Language</Label>
         <Select value={language} onValueChange={setLanguage}>
-          <SelectTrigger id="language">
+          <SelectTrigger id="language" className="border-gray-300 focus:border-blue-500">
             <SelectValue placeholder="Select language" />
           </SelectTrigger>
           <SelectContent>
@@ -68,7 +68,7 @@ const AIWriterOptions: React.FC<AIWriterOptionsProps> = ({
 
       <div className="space-y-2">
         <div className="flex justify-between">
-          <Label htmlFor="word-count">Article Length: {wordCount} words</Label>
+          <Label htmlFor="word-count" className="text-gray-700">Article Length: {wordCount} words</Label>
         </div>
         <Slider
           id="word-count"
@@ -79,7 +79,7 @@ const AIWriterOptions: React.FC<AIWriterOptionsProps> = ({
           onValueChange={(value) => setWordCount(value[0])}
           className="py-4"
         />
-        <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="flex justify-between text-xs text-gray-500">
           <span>Short (300)</span>
           <span>Medium (1000)</span>
           <span>Long (3000)</span>
@@ -87,9 +87,9 @@ const AIWriterOptions: React.FC<AIWriterOptionsProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="output-format">Output Format</Label>
+        <Label htmlFor="output-format" className="text-gray-700">Output Format</Label>
         <Select value={outputFormat} onValueChange={setOutputFormat}>
-          <SelectTrigger id="output-format">
+          <SelectTrigger id="output-format" className="border-gray-300 focus:border-blue-500">
             <SelectValue placeholder="Select output format" />
           </SelectTrigger>
           <SelectContent>

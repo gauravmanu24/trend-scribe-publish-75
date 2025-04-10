@@ -11,10 +11,15 @@ interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   onImageRequest: () => void;
-  className?: string; // Added className as optional prop
+  className?: string;
 }
 
-const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImageRequest, className }) => {
+const RichTextEditor: React.FC<RichTextEditorProps> = ({ 
+  value, 
+  onChange, 
+  onImageRequest, 
+  className 
+}) => {
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   
   const handleButtonClick = (action: string, tag: string = "") => {
@@ -111,7 +116,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImag
   
   return (
     <div className={cn("border rounded-md", className)}>
-      <div className="bg-muted/50 p-2 border-b flex flex-wrap gap-1">
+      <div className="bg-gray-100 p-2 border-b flex flex-wrap gap-1">
         <Button variant="ghost" size="icon" onClick={() => handleButtonClick("format", "b")}>
           <Bold className="h-4 w-4" />
         </Button>
@@ -159,17 +164,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, onImag
       
       <textarea
         id="rich-editor"
-        className="w-full min-h-[300px] p-4 font-mono text-sm focus:outline-none"
+        className="w-full min-h-[300px] p-4 font-mono text-sm focus:outline-none bg-white"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
       
-      <div className="border-t p-2 text-sm text-muted-foreground">
+      <div className="border-t p-2 text-sm text-gray-500">
         HTML Mode - Preview shown below
       </div>
       
       <div 
-        className="rich-editor p-4 border-t"
+        className="rich-editor p-4 border-t bg-white"
         dangerouslySetInnerHTML={renderPreview()}
       />
     </div>

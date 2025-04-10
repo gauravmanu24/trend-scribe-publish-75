@@ -11,29 +11,29 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 80% 50%;
+    --primary: 214 100% 50%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 260 40% 96.1%;
-    --secondary-foreground: 262 47.4% 11.2%;
+    --secondary: 214 40% 96.1%;
+    --secondary-foreground: 214 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 262 40% 96.1%;
-    --accent-foreground: 262 47.4% 11.2%;
+    --accent: 214 40% 96.1%;
+    --accent-foreground: 214 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 262 80% 50%;
+    --ring: 214 100% 50%;
     --radius: 0.5rem;
-    --news-100: 262 100% 96%;
-    --news-200: 262 100% 90%;
-    --news-300: 262 100% 80%;
-    --news-400: 262 100% 70%;
-    --news-500: 262 100% 60%;
-    --news-600: 262 100% 50%;
-    --news-700: 262 100% 40%;
-    --news-800: 262 100% 30%;
-    --news-900: 262 100% 20%;
+    --news-100: 214 100% 96%;
+    --news-200: 214 100% 90%;
+    --news-300: 214 100% 80%;
+    --news-400: 214 100% 70%;
+    --news-500: 214 100% 60%;
+    --news-600: 214 100% 50%;
+    --news-700: 214 100% 40%;
+    --news-800: 214 100% 30%;
+    --news-900: 214 100% 20%;
   }
  
   .dark {
@@ -43,7 +43,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 267.2 91.2% 70.8%;
+    --primary: 214 91.2% 70.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -55,16 +55,16 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 267.3 76.5% 68%;
-    --news-100: 262 100% 5%;
-    --news-200: 262 100% 10%;
-    --news-300: 262 100% 20%;
-    --news-400: 262 100% 30%;
-    --news-500: 262 100% 40%;
-    --news-600: 262 100% 50%;
-    --news-700: 262 100% 60%;
-    --news-800: 262 100% 70%;
-    --news-900: 262 100% 80%;
+    --ring: 214 76.5% 68%;
+    --news-100: 214 100% 5%;
+    --news-200: 214 100% 10%;
+    --news-300: 214 100% 20%;
+    --news-400: 214 100% 30%;
+    --news-500: 214 100% 40%;
+    --news-600: 214 100% 50%;
+    --news-700: 214 100% 60%;
+    --news-800: 214 100% 70%;
+    --news-900: 214 100% 80%;
   }
 }
  
@@ -81,10 +81,42 @@
   background-color: #1A1F2C;
 }
 
+.bg-ai-writer {
+  background-color: #f5f7fa;
+}
+
 .btn-gradient-primary {
-  background: linear-gradient(to right, #9b87f5, #7E69AB);
+  background: linear-gradient(to right, #3B82F6, #2563EB);
 }
 
 .btn-gradient-primary:hover {
-  background: linear-gradient(to right, #7E69AB, #6E59A5);
+  background: linear-gradient(to right, #2563EB, #1D4ED8);
+}
+
+.btn-blue {
+  background-color: #3B82F6;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.btn-blue:hover {
+  background-color: #2563EB;
+}
+
+.btn-outline-blue {
+  border: 1px solid #3B82F6;
+  color: #3B82F6;
+  background-color: transparent;
+  transition: all 0.2s;
+}
+
+.btn-outline-blue:hover {
+  background-color: #3B82F6;
+  color: white;
+}
+
+.panel-bg {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
 }

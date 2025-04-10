@@ -51,10 +51,10 @@ const Navigation = () => {
                   cn(
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all hover:bg-news-800",
                     isActive
-                      ? "bg-news-800 text-purples-300"
+                      ? "bg-news-800 text-blue-300"
                       : "text-gray-300",
                     item.href === "/ai-writer" && isActive
-                      ? "bg-purples-700 text-white"
+                      ? "bg-blue-700 text-white"
                       : ""
                   )
                 }

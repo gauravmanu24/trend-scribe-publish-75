@@ -17,51 +17,7 @@ import AIWriterOptions from "@/components/AIWriterOptions";
 import ContentTools from "@/components/ContentTools";
 import ImageGenerator from "@/components/ImageGenerator";
 import RichTextEditor from "@/components/RichTextEditor";
-
-const freeAiModels = [
-  { value: "google/gemini-2.0-flash-thinking-exp:free", label: "Gemini 2.0 Flash Thinking" },
-  { value: "google/gemini-2.0-flash-thinking-exp-1219:free", label: "Gemini 2.0 Flash Thinking 1219" },
-  { value: "nvidia/llama-3.1-nemotron-ultra-253b-v1:free", label: "Nemotron Ultra 253B" },
-  { value: "nvidia/llama-3.3-nemotron-super-49b-v1:free", label: "Nemotron Super 49B" },
-  { value: "moonshotai/moonlight-16b-a3b-instruct:free", label: "Moonlight 16B" },
-  { value: "nvidia/llama-3.1-nemotron-70b-instruct:free", label: "Nemotron 70B" },
-  { value: "nvidia/llama-3.1-nemotron-nano-8b-v1:free", label: "Nemotron Nano 8B" },
-  { value: "nousresearch/deephermes-3-llama-3-8b-preview:free", label: "DeepHermes 3 LLaMA 8B" },
-  { value: "google/gemini-2.0-flash-exp:free", label: "Gemini 2.0 Flash" },
-  { value: "google/learnlm-1.5-pro-experimental:free", label: "LearnLM 1.5 Pro" },
-  { value: "google/gemini-2.5-pro-exp-03-25:free", label: "Gemini 2.5 Pro" },
-  { value: "meta-llama/llama-3.2-11b-vision-instruct:free", label: "LLaMA 3.2 11B Vision" },
-  { value: "mistralai/mistral-small-3.1-24b-instruct:free", label: "Mistral Small 24B" },
-  { value: "deepseek/deepseek-r1-distill-llama-70b:free", label: "DeepSeek R1 LLaMA 70B" },
-  { value: "qwen/qwen2.5-vl-32b-instruct:free", label: "Qwen 2.5 VL 32B" },
-  { value: "qwen/qwen2.5-vl-72b-instruct:free", label: "Qwen 2.5 VL 72B" },
-  { value: "deepseek/deepseek-r1-distill-qwen-32b:free", label: "DeepSeek R1 Qwen 32B" },
-  { value: "deepseek/deepseek-r1-distill-qwen-14b:free", label: "DeepSeek R1 Qwen 14B" },
-  { value: "qwen/qwen2.5-vl-3b-instruct:free", label: "Qwen 2.5 VL 3B" },
-  { value: "meta-llama/llama-3.3-70b-instruct:free", label: "LLaMA 3.3 70B" },
-  { value: "qwen/qwen-2.5-vl-7b-instruct:free", label: "Qwen 2.5 VL 7B" },
-  { value: "mistralai/mistral-7b-instruct:free", label: "Mistral 7B" },
-  { value: "meta-llama/llama-3.2-3b-instruct:free", label: "LLaMA 3.2 3B" },
-  { value: "meta-llama/llama-3.2-1b-instruct:free", label: "LLaMA 3.2 1B" },
-  { value: "meta-llama/llama-3.1-8b-instruct:free", label: "LLaMA 3.1 8B" },
-  { value: "deepseek/deepseek-v3-base:free", label: "DeepSeek V3 Base" },
-  { value: "deepseek/deepseek-chat-v3-0324:free", label: "DeepSeek Chat V3" },
-  { value: "deepseek/deepseek-r1-zero:free", label: "DeepSeek R1 Zero" },
-  { value: "qwen/qwen-2.5-coder-32b-instruct:free", label: "Qwen 2.5 Coder 32B" },
-  { value: "mistralai/mistral-small-24b-instruct-2501:free", label: "Mistral Small 24B 2501" },
-  { value: "bytedance-research/ui-tars-72b:free", label: "TARS 72B" },
-  { value: "huggingfaceh4/zephyr-7b-beta:free", label: "Zephyr 7B Beta" },
-  { value: "meta-llama/llama-4-maverick:free", label: "LLaMA 4 Maverick" },
-  { value: "deepseek/deepseek-chat:free", label: "DeepSeek Chat" },
-  { value: "qwen/qwq-32b-preview:free", label: "QWQ 32B Preview" },
-  { value: "sophosympatheia/rogue-rose-103b-v0.2:free", label: "Rogue Rose 103B" },
-  { value: "meta-llama/llama-4-scout:free", label: "LLaMA 4 Scout" },
-  { value: "allenai/molmo-7b-d:free", label: "MOLMO 7B" },
-  { value: "google/gemma-3-27b-it:free", label: "Gemma 3 27B" },
-  { value: "qwen/qwen-2.5-7b-instruct:free", label: "Qwen 2.5 7B" },
-  { value: "google/gemma-3-1b-it:free", label: "Gemma 3 1B" },
-  { value: "google/gemma-2-9b-it:free", label: "Gemma 2 9B" }
-];
+import { freeAiModels, paidAiModels } from "@/components/AIModels";
 
 const apiIntegrations = [
   {
@@ -99,6 +55,15 @@ const apiIntegrations = [
     configKey: "deepInfraApiKey"
   }
 ];
+
+const activeFreeFreeAiModels = freeAiModels.filter(model => {
+  const excludedModels = [
+    "sophosympatheia/rogue-rose-103b-v0.2:free", 
+    "bytedance-research/ui-tars-72b:free",
+    "qwen/qwq-32b-preview:free"
+  ];
+  return !excludedModels.includes(model.value);
+});
 
 const AIWriterPage = () => {
   const navigate = useNavigate();
@@ -150,7 +115,7 @@ const AIWriterPage = () => {
       let modelToUse = openRouterConfig.model;
       
       if (modelType === "free") {
-        modelToUse = openRouterConfig.freeModel || freeAiModels[0].value;
+        modelToUse = openRouterConfig.freeModel || activeFreeFreeAiModels[0].value;
       } else if (modelType === "custom") {
         modelToUse = customModel;
       } else if (modelType === "external") {
@@ -182,42 +147,109 @@ const AIWriterPage = () => {
       
       let apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
       let apiKey = openRouterConfig.apiKey;
-      let apiHeaders = {
+      let apiHeaders: Record<string, string> = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
       };
       
       if (modelType === "external") {
         console.log(`Using external API provider: ${apiProvider}, model: ${selectedApiModel}`);
+        
+        switch (apiProvider.toLowerCase()) {
+          case "openai":
+            apiEndpoint = "https://api.openai.com/v1/chat/completions";
+            apiKey = "";
+            apiHeaders = {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+            };
+            break;
+          case "anthropic":
+            apiEndpoint = "https://api.anthropic.com/v1/messages";
+            apiKey = "";
+            apiHeaders = {
+              "Content-Type": "application/json",
+              "x-api-key": apiKey,
+              "anthropic-version": "2023-06-01"
+            };
+            break;
+          case "groq":
+            apiEndpoint = "https://api.groq.com/openai/v1/chat/completions";
+            apiKey = "";
+            apiHeaders = {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+            };
+            break;
+          default:
+            break;
+        }
       }
       
-      const response = await fetch(apiEndpoint, {
-        method: "POST",
-        headers: apiHeaders,
-        body: JSON.stringify({
-          model: modelToUse,
-          messages: [
-            {
-              role: "system",
-              content: systemMessage
-            },
-            {
-              role: "user",
-              content: userMessage
-            }
-          ],
-          temperature: 0.7,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
-      }
+      const maxRetries = 2;
+      let retryCount = 0;
+      let success = false;
+      let content = "";
       
-      const data = await response.json();
-      const content = data.choices && data.choices.length > 0 
-        ? data.choices[0]?.message?.content || "" 
-        : "";
+      while (retryCount <= maxRetries && !success) {
+        try {
+          if (retryCount > 0 && modelType === "free") {
+            const stableModels = [
+              "mistralai/mistral-7b-instruct:free", 
+              "meta-llama/llama-3.1-8b-instruct:free",
+              "google/gemini-pro:free"
+            ];
+            modelToUse = stableModels[Math.min(retryCount - 1, stableModels.length - 1)];
+            console.log(`Retrying with more stable model: ${modelToUse}`);
+          }
+          
+          const response = await fetch(apiEndpoint, {
+            method: "POST",
+            headers: apiHeaders,
+            body: JSON.stringify({
+              model: modelToUse,
+              messages: [
+                {
+                  role: "system",
+                  content: systemMessage
+                },
+                {
+                  role: "user",
+                  content: userMessage
+                }
+              ],
+              temperature: 0.7,
+              timeout: 120000
+            }),
+          });
+    
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`API error (${response.status}): ${errorText}`);
+            throw new Error(`API error: ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          content = data.choices && data.choices.length > 0 
+            ? data.choices[0]?.message?.content || "" 
+            : "";
+          
+          if (content) {
+            success = true;
+          } else {
+            throw new Error("Received empty content from API");
+          }
+        } catch (error) {
+          console.error(`Attempt ${retryCount + 1} failed:`, error);
+          retryCount++;
+          
+          if (retryCount > maxRetries) {
+            throw error;
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
       
       setGeneratedContent(content);
       
@@ -368,8 +400,8 @@ const AIWriterPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold text-center text-purples-500 mb-6">AI Writer</h1>
+    <div className="max-w-7xl mx-auto bg-ai-writer">
+      <h1 className="text-4xl font-bold text-center text-blue-600 mb-6">AI Writer</h1>
       
       {!openRouterConfig.apiKey && modelType !== "external" && (
         <Alert variant="destructive" className="mb-6">
@@ -380,31 +412,31 @@ const AIWriterPage = () => {
         </Alert>
       )}
       
-      <div className="bg-gray-100 bg-opacity-50 rounded-lg p-6">
+      <div className="rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <h2 className="text-2xl font-semibold text-purples-500 mb-4">Article Details</h2>
-            <div className="bg-dark-green rounded-md p-6 h-[480px] overflow-y-auto">
+            <h2 className="text-2xl font-semibold text-blue-600 mb-4">Article Details</h2>
+            <div className="panel-bg p-6 h-[480px] overflow-y-auto">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-white">Article Title</Label>
+                  <Label htmlFor="title" className="text-gray-700">Article Title</Label>
                   <Input 
                     id="title"
                     placeholder="Enter article title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="bg-white/10 border-purples-600 text-white"
+                    className="form-input"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="topic" className="text-white">Topic or Keywords</Label>
+                  <Label htmlFor="topic" className="text-gray-700">Topic or Keywords</Label>
                   <Input
                     id="topic"
                     placeholder="Enter topic, keywords, or brief description"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    className="bg-white/10 border-purples-600 text-white"
+                    className="form-input"
                   />
                 </div>
                 
@@ -420,35 +452,34 @@ const AIWriterPage = () => {
                 />
                 
                 <div className="space-y-4 pt-4">
-                  <Label className="text-white">AI Provider & Model</Label>
+                  <Label className="text-gray-700">AI Provider & Model</Label>
                   <Tabs 
                     value={modelType} 
                     onValueChange={setModelType}
-                    className="w-full"
+                    className="w-full ai-writer-tabs"
                   >
-                    <TabsList className="grid grid-cols-4 w-full bg-purples-900">
-                      <TabsTrigger value="predefined" className="data-[state=active]:bg-purples-700">Predefined</TabsTrigger>
-                      <TabsTrigger value="free" className="data-[state=active]:bg-purples-700">Free Models</TabsTrigger>
-                      <TabsTrigger value="custom" className="data-[state=active]:bg-purples-700">Custom</TabsTrigger>
-                      <TabsTrigger value="external" className="data-[state=active]:bg-purples-700">External APIs</TabsTrigger>
+                    <TabsList className="grid grid-cols-4 w-full">
+                      <TabsTrigger value="predefined" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Predefined</TabsTrigger>
+                      <TabsTrigger value="free" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Free Models</TabsTrigger>
+                      <TabsTrigger value="custom" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Custom</TabsTrigger>
+                      <TabsTrigger value="external" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">External APIs</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="predefined" className="space-y-2 mt-4">
-                      <Label htmlFor="model" className="text-white">OpenRouter Model</Label>
+                      <Label htmlFor="model" className="text-gray-700">OpenRouter Model</Label>
                       <Select 
                         value={openRouterConfig.model} 
                         onValueChange={(value) => updateOpenRouterConfig({ model: value })}
                       >
-                        <SelectTrigger className="bg-white/10 border-purples-600 text-white">
+                        <SelectTrigger>
                           <SelectValue placeholder="Select AI model" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="anthropic/claude-3-opus:beta">Claude 3 Opus</SelectItem>
-                          <SelectItem value="anthropic/claude-3-sonnet:beta">Claude 3 Sonnet</SelectItem>
-                          <SelectItem value="anthropic/claude-3-haiku:beta">Claude 3 Haiku</SelectItem>
-                          <SelectItem value="google/gemini-pro">Google Gemini Pro</SelectItem>
-                          <SelectItem value="openai/gpt-4o">GPT-4o</SelectItem>
-                          <SelectItem value="meta-llama/llama-3-70b-instruct">Llama 3 70B</SelectItem>
+                          {paidAiModels.map((model) => (
+                            <SelectItem key={model.value} value={model.value}>
+                              {model.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </TabsContent>
@@ -456,7 +487,7 @@ const AIWriterPage = () => {
                     <TabsContent value="free" className="space-y-2 mt-4">
                       <Label htmlFor="free-model">Free AI Models</Label>
                       <Select 
-                        value={openRouterConfig.freeModel || freeAiModels[0].value} 
+                        value={openRouterConfig.freeModel || activeFreeFreeAiModels[0].value} 
                         onValueChange={(value) => updateOpenRouterConfig({ freeModel: value })}
                       >
                         <SelectTrigger>
@@ -464,7 +495,7 @@ const AIWriterPage = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <ScrollArea className="h-80">
-                            {freeAiModels.map((model) => (
+                            {activeFreeFreeAiModels.map((model) => (
                               <SelectItem key={model.value} value={model.value}>
                                 {model.label}
                               </SelectItem>
@@ -547,16 +578,16 @@ const AIWriterPage = () => {
                       id="auto-publish" 
                       checked={autoPublish} 
                       onCheckedChange={(checked) => setAutoPublish(checked === true)}
-                      className="border-white data-[state=checked]:bg-purples-600"
+                      className="border-blue-600 data-[state=checked]:bg-blue-600"
                     />
-                    <Label htmlFor="auto-publish" className="text-white">Auto-publish to WordPress when saving</Label>
+                    <Label htmlFor="auto-publish" className="text-gray-700">Auto-publish to WordPress when saving</Label>
                   </div>
                 )}
                 
                 <div className="pt-4">
                   <Button 
                     variant="outline"
-                    className="w-full mb-4 border-purples-500 text-white hover:bg-purples-700 hover:text-white" 
+                    className="w-full mb-4 btn-outline-blue" 
                     onClick={() => setShowAiImageGenerator(true)}
                     disabled={loading}
                   >
@@ -565,7 +596,7 @@ const AIWriterPage = () => {
                   </Button>
                   
                   <Button 
-                    className="w-full bg-purples-600 hover:bg-purples-700"
+                    className="w-full btn-blue"
                     onClick={handleGenerate}
                     disabled={loading || !title || !topic || (modelType !== "external" && !openRouterConfig.apiKey)}
                   >
@@ -584,14 +615,14 @@ const AIWriterPage = () => {
           </div>
           
           <div>
-            <h2 className="text-2xl font-semibold text-purples-500 mb-4">Generated Content</h2>
-            <div className="bg-dark-green rounded-md p-6 h-[480px] flex flex-col">
+            <h2 className="text-2xl font-semibold text-blue-600 mb-4">Generated Content</h2>
+            <div className="panel-bg p-6 h-[480px] flex flex-col">
               <div className="flex-grow overflow-auto mb-4">
                 <RichTextEditor 
                   value={generatedContent} 
                   onChange={setGeneratedContent}
                   onImageRequest={() => setShowImageGenerator(true)}
-                  className="text-white bg-transparent min-h-full" 
+                  className="text-gray-700 bg-transparent min-h-full" 
                 />
               </div>
               <div className="flex justify-between">
@@ -599,14 +630,14 @@ const AIWriterPage = () => {
                   variant="outline" 
                   onClick={() => setGeneratedContent("")}
                   disabled={!generatedContent || loading}
-                  className="border-purples-500 text-white hover:bg-purples-700 hover:text-white"
+                  className="btn-outline-blue"
                 >
                   Clear
                 </Button>
                 <Button 
                   onClick={handleSave}
                   disabled={!generatedContent || loading}
-                  className="bg-purples-600 hover:bg-purples-700"
+                  className="btn-blue"
                 >
                   {loading ? (
                     <>
@@ -626,9 +657,9 @@ const AIWriterPage = () => {
         </div>
         
         <div>
-          <h2 className="text-2xl font-semibold text-purples-500 text-center mb-2">Content Tools</h2>
-          <p className="text-center text-purples-500 mb-4">Analyze and improve your content with these tools</p>
-          <div className="bg-dark-green rounded-md p-6 h-[350px] overflow-auto">
+          <h2 className="text-2xl font-semibold text-blue-600 text-center mb-2">Content Tools</h2>
+          <p className="text-center text-blue-600 mb-4">Analyze and improve your content with these tools</p>
+          <div className="panel-bg p-6 h-[350px] overflow-auto">
             <ContentTools content={generatedContent} />
           </div>
         </div>
@@ -649,7 +680,7 @@ const AIWriterPage = () => {
           <Button 
             variant="outline" 
             onClick={() => setShowImageGenerator(true)}
-            className="w-full mt-6 border-purples-500 text-purples-600 hover:bg-purples-700 hover:text-white"
+            className="w-full mt-6 btn-outline-blue"
           >
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Image
