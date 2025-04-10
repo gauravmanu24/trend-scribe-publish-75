@@ -48,6 +48,7 @@ export interface AutomationLog {
 export interface OpenRouterConfig {
   apiKey: string;
   model: string;
+  freeModel?: string;
   isConnected: boolean;
 }
 

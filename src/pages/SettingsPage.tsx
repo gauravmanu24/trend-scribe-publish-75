@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, RefreshCcw, AlertCircle, MonitorDown } from "lucide-react";
+import { Loader2, Check, RefreshCcw, AlertCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,7 +19,7 @@ const SettingsPage = () => {
   // State from store
   const openRouterConfig = useAppStore((state) => state.openRouterConfig);
   const wordPressConfig = useAppStore((state) => state.wordPressConfig);
-  const pollingInterval = useAppStore((state) => state.pollingInterval);
+  const pollingInterval = useAppStore((state) => state.pollingInterval) || 60; // Default to 60 if undefined
   const updateOpenRouterConfig = useAppStore((state) => state.updateOpenRouterConfig);
   const updateWordPressConfig = useAppStore((state) => state.updateWordPressConfig);
   const setPollingInterval = useAppStore((state) => state.setPollingInterval);

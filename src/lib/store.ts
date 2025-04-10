@@ -23,13 +23,18 @@ interface AppState {
   clearAutomationLogs: () => void;
   
   openRouterConfig: OpenRouterConfig;
-  setOpenRouterConfig: (config: Partial<OpenRouterConfig>) => void;
+  updateOpenRouterConfig: (config: Partial<OpenRouterConfig>) => void;
   
   wordPressConfig: WordPressConfig;
-  setWordPressConfig: (config: Partial<WordPressConfig>) => void;
+  updateWordPressConfig: (config: Partial<WordPressConfig>) => void;
+  
+  pollingInterval: number;
+  setPollingInterval: (interval: number) => void;
   
   isPolling: boolean;
   setPolling: (isPolling: boolean) => void;
+  
+  reset: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -64,8 +69,14 @@ export const useAppStore = create<AppState>()(
           articles: [
             ...state.articles,
             {
-              id: article.id || uuidv4(),
+              id: uuidv4(),
               updatedAt: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
+              publishedAt: null,
+              wordpressPostId: null,
+              wordpressPostUrl: null,
+              sourceLink: null,
+              category: article.category || "general",
               ...article,
             },
           ],
@@ -99,10 +110,11 @@ export const useAppStore = create<AppState>()(
       
       openRouterConfig: {
         apiKey: "",
-        model: "",
+        model: "anthropic/claude-3-opus:beta",
+        freeModel: "meta-llama/llama-3-8b-instruct",
         isConnected: false,
       },
-      setOpenRouterConfig: (config) =>
+      updateOpenRouterConfig: (config) =>
         set((state) => ({
           openRouterConfig: {
             ...state.openRouterConfig,
@@ -116,7 +128,7 @@ export const useAppStore = create<AppState>()(
         password: "",
         isConnected: false,
       },
-      setWordPressConfig: (config) =>
+      updateWordPressConfig: (config) =>
         set((state) => ({
           wordPressConfig: {
             ...state.wordPressConfig,
@@ -124,8 +136,32 @@ export const useAppStore = create<AppState>()(
           },
         })),
       
+      pollingInterval: 60, // Default 60 minutes
+      setPollingInterval: (interval) => set({ pollingInterval: interval }),
+      
       isPolling: false,
       setPolling: (isPolling) => set({ isPolling }),
+      
+      reset: () => set({
+        feeds: [],
+        articles: [],
+        automationSources: [],
+        automationLogs: [],
+        openRouterConfig: {
+          apiKey: "",
+          model: "anthropic/claude-3-opus:beta",
+          freeModel: "meta-llama/llama-3-8b-instruct",
+          isConnected: false,
+        },
+        wordPressConfig: {
+          url: "",
+          username: "",
+          password: "",
+          isConnected: false,
+        },
+        pollingInterval: 60,
+        isPolling: false,
+      }),
     }),
     {
       name: "trendscribe-storage",
