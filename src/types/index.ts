@@ -26,7 +26,7 @@ export interface Article {
 export interface AutomationSource {
   id: string;
   name: string;
-  type: "rss" | "sheets" | "manual";
+  type: "rss" | "sheets" | "manual" | "file";
   url?: string;
   titles?: string[];
   createdAt: string;
