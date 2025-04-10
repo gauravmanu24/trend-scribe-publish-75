@@ -5,6 +5,7 @@ import Navigation from "./Navigation";
 import Footer from "./Footer";
 import { Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import "../styles/custom.css"; // Import custom CSS for dark-green background
 
 const Layout = () => {
   const location = useLocation();

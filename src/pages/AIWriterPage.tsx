@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
@@ -590,8 +591,8 @@ const AIWriterPage = () => {
                 <RichTextEditor 
                   value={generatedContent} 
                   onChange={setGeneratedContent}
-                  onImageRequest={() => setShowImageGenerator(true)} 
-                  className="text-white bg-transparent min-h-full"
+                  onImageRequest={() => setShowImageGenerator(true)}
+                  className="text-white bg-transparent min-h-full" 
                 />
               </div>
               <div className="flex justify-between">

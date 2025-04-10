@@ -1,0 +1,17 @@
+
+/* Custom styles for the AI Writer page */
+.bg-dark-green {
+  background-color: #0a5035;
+  color: white;
+}
+
+/* Rich text editor styles for dark mode */
+.bg-dark-green .rich-editor {
+  background-color: #0c5c3d;
+  color: white;
+}
+
+/* Button styles */
+.bg-dark-green button:not(.data-[state=active]) {
+  color: white;
+}
