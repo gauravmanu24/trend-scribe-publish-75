@@ -16,6 +16,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { format } from "date-fns";
 import { useAppStore } from "@/lib/store";
 import { v4 as uuidv4 } from "uuid";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AutomationLog, AutomationSource, Article } from "@/types";
 
 const AutomatedPublishing = () => {
@@ -30,9 +31,11 @@ const AutomatedPublishing = () => {
   const isPolling = useAppStore((state) => state.isPolling);
   const setPolling = useAppStore((state) => state.setPolling);
   const pollingInterval = useAppStore((state) => state.pollingInterval);
+  const setPollingInterval = useAppStore((state) => state.setPollingInterval);
   const lastManualRun = useAppStore((state) => state.lastManualRun);
   const setLastManualRun = useAppStore((state) => state.setLastManualRun);
   const wordPressConfig = useAppStore((state) => state.wordPressConfig);
+  const openRouterConfig = useAppStore((state) => state.openRouterConfig);
   
   const [newSourceName, setNewSourceName] = useState("");
   const [newSourceType, setNewSourceType] = useState<"rss" | "sheets" | "manual">("manual");
@@ -42,7 +45,13 @@ const AutomatedPublishing = () => {
   const [isRunningAction, setIsRunningAction] = useState(false);
   const [autoPublish, setAutoPublish] = useState(false);
   const [language, setLanguage] = useState("en");
-  const [newSourcePrompt, setNewSourcePrompt] = useState("");
+  const [tone, setTone] = useState("professional");
+  const [wordCount, setWordCount] = useState("800");
+  const [category, setCategory] = useState("general");
+  const [defaultPrompt, setDefaultPrompt] = useState(
+    "Write a comprehensive, well-researched article with the following title: '{TITLE}'. Format your response with proper HTML tags including h2, h3 for headings, <ul> and <li> for lists, and <p> tags for paragraphs. The article should be informative, factual, and engaging for readers."
+  );
+  const [activeTab, setActiveTab] = useState("sources");
   
   useEffect(() => {
     // Initialize sources if empty
@@ -130,7 +139,6 @@ const AutomatedPublishing = () => {
       setNewSourceType("manual");
       setNewSourceUrl("");
       setNewSourceTitles("");
-      setNewSourcePrompt("");
       
       toast({
         title: "Source added",
@@ -245,44 +253,100 @@ const AutomatedPublishing = () => {
   
   const generateArticle = async (title: string) => {
     try {
-      // In a real implementation, this would call an AI service to generate content
-      // For demo purposes, we'll create a stub article
-      
+      // Use OpenRouter API to generate content
+      if (!openRouterConfig.apiKey) {
+        toast({
+          title: "OpenRouter API key missing",
+          description: "Please configure your OpenRouter API key in settings.",
+          variant: "destructive",
+        });
+        return { success: false, error: "OpenRouter API key missing" };
+      }
+
       const now = new Date().toISOString();
       
-      // Use prompt if available, otherwise use default content
-      const content = newSourcePrompt 
-        ? `${newSourcePrompt}\n\nArticle title: ${title}\n\n` +
-          `<h2>${title}</h2>\n\n<p>This is a generated article based on the user's prompt.</p>` +
-          `<p>Language: ${language === "hi" ? "हिंदी" : language === "en" ? "English" : language}</p>`
-        : `This is an automatically generated article about "${title}".\n\n` +
-          `<h2>Introduction</h2>\n\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, vitae aliquam nisl nisl eget nisl.</p>\n\n` +
-          `<h2>Main Content</h2>\n\n<p>Sed euismod, nisl eget ultricies aliquam, nunc nisl aliquet nunc, vitae aliquam nisl nisl eget nisl. Sed euismod, nisl eget ultricies aliquam, nunc nisl aliquet nunc, vitae aliquam nisl nisl eget nisl.</p>\n\n` +
-          `<h2>Conclusion</h2>\n\n<p>This article was automatically generated based on the title. Language: ${language === "hi" ? "हिंदी" : language === "en" ? "English" : language}</p>`;
+      // Prepare prompt using the default prompt template
+      let prompt = defaultPrompt.replace('{TITLE}', title);
       
-      const newArticle = {
-        title,
-        content: content,
-        status: autoPublish ? "published" as Article["status"] : "generated" as Article["status"],
-        createdAt: now,
-        publishedAt: autoPublish ? now : null,
-        sourceTitle: "Automated Generation",
-        category: "automated",
-        wordpressPostId: null,
-        wordpressPostUrl: null,
-      };
-      
-      addArticle(newArticle);
-      
-      if (autoPublish && wordPressConfig.isConnected) {
-        // In a real implementation, this would make an API call to WordPress
-        // For demo purposes, we'll simulate success
-        return { success: true, articleId: uuidv4() };
+      // Add language instruction
+      if (language === "hi") {
+        prompt += " Write the article in Hindi language.";
+      } else if (language !== "en") {
+        prompt += ` Write the article in ${language} language.`;
       }
       
-      return { success: true, articleId: uuidv4() };
+      // Add tone instruction
+      prompt += ` Use a ${tone} tone.`;
+      
+      // Add word count instruction
+      prompt += ` The article should be approximately ${wordCount} words long.`;
+      
+      const modelToUse = openRouterConfig.model || "meta-llama/llama-3.1-8b-instruct";
+      
+      try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${openRouterConfig.apiKey}`,
+            "HTTP-Referer": window.location.origin,
+          },
+          body: JSON.stringify({
+            model: modelToUse,
+            messages: [
+              {
+                role: "system",
+                content: `You are a professional content writer who creates well-researched, informative articles. Write in a ${tone} tone with proper HTML formatting.`
+              },
+              {
+                role: "user",
+                content: prompt
+              }
+            ],
+            temperature: 0.7,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("OpenRouter API error response:", errorText);
+          throw new Error(`OpenRouter API error: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const content = data.choices && data.choices.length > 0 
+          ? data.choices[0]?.message?.content || "" 
+          : "";
+        
+        if (!content) {
+          throw new Error("AI generated empty content");
+        }
+        
+        // Create a new article
+        const newArticle: Omit<Article, "id" | "updatedAt"> = {
+          title,
+          content,
+          status: autoPublish ? "published" : "generated",
+          createdAt: now,
+          publishedAt: autoPublish ? now : null,
+          sourceTitle: "Automated Generation",
+          category,
+          wordpressPostId: null,
+          wordpressPostUrl: null,
+        };
+        
+        addArticle(newArticle);
+        
+        return { success: true, articleId: uuidv4() };
+      } catch (error) {
+        console.error("Error calling OpenRouter API:", error);
+        return { 
+          success: false, 
+          error: error instanceof Error ? error.message : "Failed to generate content" 
+        };
+      }
     } catch (error) {
-      console.error("Error processing title:", error);
+      console.error("Error generating article:", error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : "Unknown error" 
@@ -310,38 +374,59 @@ const AutomatedPublishing = () => {
     });
   };
   
+  const handleIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setPollingInterval(value);
+    }
+  };
+  
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Automated Publishing</h2>
-          <p className="text-muted-foreground">Set up automatic content generation from various sources</p>
+          <p className="text-muted-foreground">Configure automated article generation from various sources</p>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Label htmlFor="interval" className="shrink-0">Interval (minutes)</Label>
+            <Input
+              id="interval"
+              type="number"
+              min="1"
+              className="w-20"
+              value={pollingInterval}
+              onChange={handleIntervalChange}
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
             <Switch 
               id="polling-mode"
               checked={isPolling}
               onCheckedChange={setPolling}
             />
-            <Label htmlFor="polling-mode">Auto-publish ({pollingInterval} min)</Label>
+            <Label htmlFor="polling-mode" className="whitespace-nowrap">
+              {isPolling ? "Enabled" : "Disabled"}
+            </Label>
           </div>
           
           <Button 
-            variant="outline"
+            variant="default"
             onClick={processAutomation}
             disabled={isRunningAction || sources.filter(s => s.isActive).length === 0}
-            className="flex items-center"
+            className="flex items-center gap-2"
           >
             {isRunningAction ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Processing...
               </>
             ) : (
               <>
-                <Play className="mr-2 h-4 w-4" />
+                <Play className="h-4 w-4" />
                 Run Now
               </>
             )}
@@ -356,11 +441,14 @@ const AutomatedPublishing = () => {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Sources */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Content Sources</h3>
-          
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="sources">Sources</TabsTrigger>
+          <TabsTrigger value="default">Default Settings</TabsTrigger>
+          <TabsTrigger value="logs">Logs</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="sources" className="pt-6">
           <div className="space-y-4">
             {sources.length === 0 ? (
               <p className="text-muted-foreground">No automation sources configured.</p>
@@ -488,48 +576,6 @@ const AutomatedPublishing = () => {
                       </p>
                     </div>
                   )}
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="prompt-template">Content Generation Prompt</Label>
-                    <Textarea 
-                      id="prompt-template"
-                      placeholder="Write a detailed article about [TOPIC]. Include sections on history, modern applications, and future trends." 
-                      value={newSourcePrompt}
-                      onChange={(e) => setNewSourcePrompt(e.target.value)}
-                      rows={4}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Customize how articles are generated with a specific prompt template.
-                    </p>
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="language">Article Language</Label>
-                    <Select 
-                      value={language} 
-                      onValueChange={setLanguage}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="hi">Hindi</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                        <SelectItem value="fr">French</SelectItem>
-                        <SelectItem value="de">German</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 pt-2">
-                    <Switch 
-                      id="auto-publish" 
-                      checked={autoPublish} 
-                      onCheckedChange={setAutoPublish}
-                    />
-                    <Label htmlFor="auto-publish">Auto-publish to WordPress</Label>
-                  </div>
                 </div>
                 
                 <SheetFooter>
@@ -553,10 +599,113 @@ const AutomatedPublishing = () => {
               </SheetContent>
             </Sheet>
           </div>
-        </div>
+        </TabsContent>
         
-        {/* Activity Logs */}
-        <div>
+        <TabsContent value="default" className="pt-6">
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle>Default Article Settings</CardTitle>
+              <CardDescription>
+                Configure default settings for automatically generated articles
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid gap-3">
+                  <Label htmlFor="default-tone">Default Tone</Label>
+                  <Select value={tone} onValueChange={setTone}>
+                    <SelectTrigger id="default-tone">
+                      <SelectValue placeholder="Select tone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="casual">Casual</SelectItem>
+                      <SelectItem value="friendly">Friendly</SelectItem>
+                      <SelectItem value="authoritative">Authoritative</SelectItem>
+                      <SelectItem value="humorous">Humorous</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-3">
+                  <Label htmlFor="default-language">Default Language</Label>
+                  <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger id="default-language">
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="hi">Hindi</SelectItem>
+                      <SelectItem value="es">Spanish</SelectItem>
+                      <SelectItem value="fr">French</SelectItem>
+                      <SelectItem value="de">German</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid gap-3">
+                  <Label htmlFor="default-word-count">Default Word Count</Label>
+                  <Input
+                    id="default-word-count"
+                    type="number"
+                    min="200"
+                    value={wordCount}
+                    onChange={(e) => setWordCount(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <Label htmlFor="default-category">Default Category</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger id="default-category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="technology">Technology</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
+                      <SelectItem value="health">Health</SelectItem>
+                      <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                      <SelectItem value="news">News</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid gap-3">
+                <Label htmlFor="default-prompt">Default Generation Prompt</Label>
+                <Textarea 
+                  id="default-prompt"
+                  placeholder="Write a comprehensive article about {TITLE}..." 
+                  value={defaultPrompt}
+                  onChange={(e) => setDefaultPrompt(e.target.value)}
+                  rows={5}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use {'{TITLE}'} as a placeholder for the article title in your prompt.
+                </p>
+              </div>
+              
+              <div className="flex items-center space-x-2 pt-2">
+                <Switch 
+                  id="auto-publish" 
+                  checked={autoPublish} 
+                  onCheckedChange={setAutoPublish}
+                />
+                <Label htmlFor="auto-publish">Automatically publish to WordPress</Label>
+              </div>
+              
+              {autoPublish && !wordPressConfig.isConnected && (
+                <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200 flex gap-2 text-yellow-800">
+                  <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                  <p className="text-sm">WordPress is not configured. Please check your settings.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="logs" className="pt-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Activity Logs</h3>
             
@@ -619,8 +768,8 @@ const AutomatedPublishing = () => {
               </Table>
             )}
           </div>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
