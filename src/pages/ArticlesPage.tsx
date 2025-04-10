@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -67,7 +66,6 @@ const ArticlesPage = () => {
     } else if (sortOrder === "oldest") {
       return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     } else {
-      // title
       return a.title.localeCompare(b.title);
     }
   });
@@ -112,33 +110,36 @@ const ArticlesPage = () => {
             </div>
             
             <div className="flex flex-wrap gap-2 w-full md:w-auto">
-              <Select value={statusFilter} onValueChange={setStatusFilter} className="min-w-[140px]">
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Drafts</SelectItem>
-                  <SelectItem value="generated">Generated</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="min-w-[140px]">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="draft">Drafts</SelectItem>
+                    <SelectItem value="generated">Generated</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select 
-                value={sortOrder} 
-                onValueChange={(value: "newest" | "oldest" | "title") => setSortOrder(value)}
-                className="min-w-[140px]"
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sort" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                  <SelectItem value="title">Title (A-Z)</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="min-w-[140px]">
+                <Select 
+                  value={sortOrder} 
+                  onValueChange={(value: "newest" | "oldest" | "title") => setSortOrder(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="title">Title (A-Z)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
               <Button 
                 variant="default" 
