@@ -33,6 +33,10 @@ interface AppState {
   
   isPolling: boolean;
   setPolling: (isPolling: boolean) => void;
+
+  // For FeedsPage.tsx error
+  lastManualRun: string | null;
+  setLastManualRun: (date: string | null) => void;
   
   reset: () => void;
 }
@@ -141,6 +145,10 @@ export const useAppStore = create<AppState>()(
       
       isPolling: false,
       setPolling: (isPolling) => set({ isPolling }),
+
+      // Add missing property for FeedsPage.tsx
+      lastManualRun: null,
+      setLastManualRun: (date) => set({ lastManualRun: date }),
       
       reset: () => set({
         feeds: [],
@@ -161,6 +169,7 @@ export const useAppStore = create<AppState>()(
         },
         pollingInterval: 60,
         isPolling: false,
+        lastManualRun: null,
       }),
     }),
     {
