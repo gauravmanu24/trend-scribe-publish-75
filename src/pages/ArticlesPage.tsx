@@ -7,7 +7,7 @@ import { useAppStore } from "@/lib/store";
 import ArticleCard from "@/components/ArticleCard";
 import ArticleDialog from "@/components/ArticleDialog";
 import { Article } from "@/types";
-import { Search, PlusCircle, Settings, ArrowUpDown, AutomationIcon } from "lucide-react";
+import { Search, PlusCircle, Settings, ArrowUpDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import AutomatedPublishing from "@/components/AutomatedPublishing";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
