@@ -91,6 +91,87 @@ const AutomatedPublishing = () => {
     }
   }, pollingInterval * 60 * 1000);
   
+  const resetSourceForm = () => {
+    setNewSourceName("");
+    setNewSourceType("manual");
+    setNewSourceUrl("");
+    setNewSourceTitles("");
+    setUploadedFile(null);
+    setIsEditingSource(false);
+    setEditSourceId(null);
+    setIsSourceSheetOpen(false);
+  };
+
+  const editSource = (source: AutomationSource) => {
+    setEditSourceId(source.id);
+    setIsEditingSource(true);
+    setNewSourceName(source.name);
+    setNewSourceType(source.type);
+    setNewSourceUrl(source.url || "");
+    setNewSourceTitles(source.titles ? source.titles.join("\n") : "");
+    setIsSourceSheetOpen(true);
+  };
+
+  const confirmDeleteSource = (sourceId: string) => {
+    setSourceToDelete(sourceId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSource = () => {
+    if (sourceToDelete) {
+      const sourceToRemove = sources.find(s => s.id === sourceToDelete);
+      const updatedSources = sources.filter(s => s.id !== sourceToDelete);
+      setSources(updatedSources);
+      
+      toast({
+        title: "Source deleted",
+        description: sourceToRemove ? `"${sourceToRemove.name}" has been deleted.` : "The automation source has been deleted.",
+      });
+      
+      setSourceToDelete(null);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const toggleSourceStatus = (id: string, isActive: boolean) => {
+    setSources(sources.map(s => 
+      s.id === id ? { ...s, isActive } : s
+    ));
+    
+    toast({
+      title: isActive ? "Source activated" : "Source paused",
+      description: `The automation source has been ${isActive ? "activated" : "paused"}.`,
+    });
+  };
+  
+  const deleteSource = (id: string) => {
+    setSources(sources.filter(s => s.id !== id));
+    
+    toast({
+      title: "Source deleted",
+      description: "The automation source has been deleted.",
+    });
+  };
+  
+  const handleIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setPollingInterval(value);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      toast({
+        title: "File uploaded",
+        description: `${file.name} has been uploaded.`,
+      });
+    }
+  };
+
+  // Add back the addSource function which was missing
   const addSource = () => {
     if (!newSourceName) {
       toast({
@@ -254,48 +335,7 @@ const AutomatedPublishing = () => {
     }
   };
 
-  const resetSourceForm = () => {
-    setNewSourceName("");
-    setNewSourceType("manual");
-    setNewSourceUrl("");
-    setNewSourceTitles("");
-    setUploadedFile(null);
-    setIsEditingSource(false);
-    setEditSourceId(null);
-    setIsSourceSheetOpen(false);
-  };
-
-  const editSource = (source: AutomationSource) => {
-    setEditSourceId(source.id);
-    setIsEditingSource(true);
-    setNewSourceName(source.name);
-    setNewSourceType(source.type);
-    setNewSourceUrl(source.url || "");
-    setNewSourceTitles(source.titles ? source.titles.join("\n") : "");
-    setIsSourceSheetOpen(true);
-  };
-
-  const confirmDeleteSource = (sourceId: string) => {
-    setSourceToDelete(sourceId);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDeleteSource = () => {
-    if (sourceToDelete) {
-      const sourceToRemove = sources.find(s => s.id === sourceToDelete);
-      const updatedSources = sources.filter(s => s.id !== sourceToDelete);
-      setSources(updatedSources);
-      
-      toast({
-        title: "Source deleted",
-        description: sourceToRemove ? `"${sourceToRemove.name}" has been deleted.` : "The automation source has been deleted.",
-      });
-      
-      setSourceToDelete(null);
-      setIsDeleteDialogOpen(false);
-    }
-  };
-
+  // Add the processFileForTitles function
   const processFileForTitles = async (file: File): Promise<string[] | null> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -334,7 +374,8 @@ const AutomatedPublishing = () => {
       }
     });
   };
-  
+
+  // Add the processAutomation function
   const processAutomation = async () => {
     if (isRunningAction) return;
     
@@ -361,7 +402,8 @@ const AutomatedPublishing = () => {
       setIsRunningAction(false);
     }
   };
-  
+
+  // Add the processSource function
   const processSource = async (source: AutomationSource) => {
     if (!source.isActive) return;
     
@@ -427,7 +469,8 @@ const AutomatedPublishing = () => {
       });
     }
   };
-  
+
+  // Add the generateArticle function
   const generateArticle = async (title: string) => {
     try {
       if (!openRouterConfig.apiKey) {
@@ -522,44 +565,6 @@ const AutomatedPublishing = () => {
         success: false, 
         error: error instanceof Error ? error.message : "Unknown error" 
       };
-    }
-  };
-  
-  const toggleSourceStatus = (id: string, isActive: boolean) => {
-    setSources(sources.map(s => 
-      s.id === id ? { ...s, isActive } : s
-    ));
-    
-    toast({
-      title: isActive ? "Source activated" : "Source paused",
-      description: `The automation source has been ${isActive ? "activated" : "paused"}.`,
-    });
-  };
-  
-  const deleteSource = (id: string) => {
-    setSources(sources.filter(s => s.id !== id));
-    
-    toast({
-      title: "Source deleted",
-      description: "The automation source has been deleted.",
-    });
-  };
-  
-  const handleIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value) && value > 0) {
-      setPollingInterval(value);
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setUploadedFile(file);
-      toast({
-        title: "File uploaded",
-        description: `${file.name} has been uploaded.`,
-      });
     }
   };
   
@@ -902,7 +907,3 @@ const AutomatedPublishing = () => {
                     {isAddingSource ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {isEditingSource ? "Updating..." : "Adding..."}
-                      </>
-                    ) : (
-                      isEditingSource ? "Update Source" : "Add Source"
