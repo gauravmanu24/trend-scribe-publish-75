@@ -154,7 +154,7 @@ const Footer = () => {
         
         <div className="border-t border-gray-200 mt-8 pt-8 text-center">
           <p className="text-sm text-gray-500">
-            © {currentYear} TrendScribe. All rights reserved.
+            © {currentYear} TrendScribe. All rights reserved. This lovely tool developed by Gaurav Srivastava.
           </p>
         </div>
       </div>

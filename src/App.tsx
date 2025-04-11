@@ -42,7 +42,7 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <Routes>
-                {/* Public Routes - Header now included in all public routes */}
+                {/* Public Routes - Include Header and Footer but not duplicated in pages */}
                 <Route path="/" element={
                   <>
                     <Header />

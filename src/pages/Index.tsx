@@ -10,9 +10,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { RssIcon, Newspaper, PencilLine, RotateCcw, BarChart3, Zap } from "lucide-react";
+import { 
+  RssIcon, Newspaper, PencilLine, RotateCcw, BarChart3, Zap, 
+  Award, Globe, BookOpen, MessageSquare, Code, CloudLightning
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import Header from "@/components/Header";
 
 const Index = () => {
   const { user } = useAuth();
@@ -20,10 +22,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Header */}
-      <Header />
-
-      {/* Hero Section */}
+      {/* Hero Section - Removed the duplicate Header component */}
       <section className="relative py-20 px-6 md:px-10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-12">
@@ -90,7 +89,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Grid Section */}
+      {/* Features Grid Section - Enhanced with more feature cards */}
       <section className="py-20 px-6 md:px-10 bg-accent/10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -131,12 +130,53 @@ const Index = () => {
               title="AI Model Selection"
               description="Choose from various AI models to optimize for quality, speed, or cost based on your needs."
             />
+            <FeatureCard 
+              icon={<Award className="h-8 w-8 text-primary" />}
+              title="SEO Optimization"
+              description="Built-in SEO tools to ensure your content ranks well in search engines with proper keyword usage."
+            />
+            <FeatureCard 
+              icon={<Globe className="h-8 w-8 text-primary" />}
+              title="Multi-language Support"
+              description="Create content in multiple languages to expand your global reach and audience engagement."
+            />
+            <FeatureCard 
+              icon={<MessageSquare className="h-8 w-8 text-primary" />}
+              title="Article Commenting"
+              description="Enable commenting features to increase reader engagement and build a community around your content."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* New Statistics Section */}
+      <section className="py-20 px-6 md:px-10">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12">Trusted by Content Creators Worldwide</h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+            <div className="p-6 rounded-lg bg-card shadow-sm border">
+              <p className="text-4xl md:text-5xl font-bold text-primary">10K+</p>
+              <p className="text-muted-foreground mt-2">Articles Generated</p>
+            </div>
+            <div className="p-6 rounded-lg bg-card shadow-sm border">
+              <p className="text-4xl md:text-5xl font-bold text-primary">2.5M+</p>
+              <p className="text-muted-foreground mt-2">Words Created</p>
+            </div>
+            <div className="p-6 rounded-lg bg-card shadow-sm border">
+              <p className="text-4xl md:text-5xl font-bold text-primary">98%</p>
+              <p className="text-muted-foreground mt-2">Customer Satisfaction</p>
+            </div>
+            <div className="p-6 rounded-lg bg-card shadow-sm border">
+              <p className="text-4xl md:text-5xl font-bold text-primary">3hr+</p>
+              <p className="text-muted-foreground mt-2">Time Saved Per Article</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* How To Use Section */}
-      <section className="py-20 px-6 md:px-10">
+      <section className="py-20 px-6 md:px-10 bg-muted/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
@@ -214,6 +254,56 @@ const Index = () => {
         </div>
       </section>
 
+      {/* New Section: Use Cases */}
+      <section className="py-20 px-6 md:px-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Perfect For</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              TrendScribe serves a wide range of content creators and publishers
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="border bg-card">
+              <CardHeader className="pb-2">
+                <BookOpen className="h-8 w-8 text-primary mb-4" />
+                <CardTitle>Blog Owners</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Keep your blog consistently updated with fresh, relevant content that engages your readers and improves SEO rankings.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="border bg-card">
+              <CardHeader className="pb-2">
+                <Code className="h-8 w-8 text-primary mb-4" />
+                <CardTitle>Content Marketers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Scale your content marketing efforts without hiring more writers. Create more content in less time.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="border bg-card">
+              <CardHeader className="pb-2">
+                <CloudLightning className="h-8 w-8 text-primary mb-4" />
+                <CardTitle>News Websites</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Transform trending news into unique perspectives and analysis pieces that differentiate your site.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* FAQs Section */}
       <section className="py-20 px-6 md:px-10 bg-muted/30">
         <div className="max-w-4xl mx-auto">
@@ -259,6 +349,13 @@ const Index = () => {
               <AccordionContent>
                 Absolutely! TrendScribe offers extensive customization options including tone (professional, 
                 conversational, enthusiastic, etc.), content length, output format, and more.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-6">
+              <AccordionTrigger>Is there a limit to how many articles I can generate?</AccordionTrigger>
+              <AccordionContent>
+                TrendScribe offers different pricing plans with varying content generation limits. Our premium 
+                plans provide higher limits and additional features for power users and agencies.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
