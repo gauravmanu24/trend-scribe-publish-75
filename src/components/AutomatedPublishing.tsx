@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useInterval } from "@/hooks/useInterval";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { useAppStore } from "@/lib/store";
 import { v4 as uuidv4 } from "uuid";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AutomationLog, AutomationSource, Article } from "@/types";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 
 const AutomatedPublishing = () => {
   const { toast } = useToast();
@@ -40,6 +41,8 @@ const AutomatedPublishing = () => {
   const setLastManualRun = useAppStore((state) => state.setLastManualRun);
   const wordPressConfig = useAppStore((state) => state.wordPressConfig);
   const openRouterConfig = useAppStore((state) => state.openRouterConfig);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isEditingSource, setIsEditingSource] = useState(false);
   const [editSourceId, setEditSourceId] = useState<string | null>(null);
@@ -69,6 +72,39 @@ const AutomatedPublishing = () => {
   const [processingSourceId, setProcessingSourceId] = useState<string | null>(null);
   const [totalTitlesToProcess, setTotalTitlesToProcess] = useState<number>(0);
   const [titlesProcessed, setTitlesProcessed] = useState<number>(0);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    setUploadedFile(file);
+    
+    toast({
+      title: "File uploaded",
+      description: `${file.name} has been uploaded successfully`,
+    });
+    
+    if (fileType === "txt") {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        if (content) {
+          const lines = content.split('\n').filter(line => line.trim().length > 0);
+          setNewSourceTitles(lines.join('\n'));
+          toast({
+            title: "Titles extracted",
+            description: `${lines.length} titles extracted from file`,
+          });
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
 
   const handleAddSource = async () => {
     if (!newSourceName) {
@@ -797,15 +833,32 @@ const AutomatedPublishing = () => {
                   </Button>
                 </div>
                 
-                <div className="mt-2">
+                <div className="mt-2 relative">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept={
+                      fileType === "txt" ? ".txt" : 
+                      fileType === "csv" ? ".csv" : 
+                      ".xlsx,.xls"
+                    }
+                  />
                   <Button 
                     type="button"
                     variant="outline" 
                     className="w-full"
+                    onClick={triggerFileUpload}
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload File
+                    {uploadedFile ? uploadedFile.name : "Upload File"}
                   </Button>
+                  {uploadedFile && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      File selected: {uploadedFile.name} ({Math.round(uploadedFile.size / 1024)} KB)
+                    </div>
+                  )}
                 </div>
               </div>
             )}
