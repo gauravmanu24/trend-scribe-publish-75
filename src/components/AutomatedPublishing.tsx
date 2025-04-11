@@ -734,8 +734,11 @@ const AutomatedPublishing = () => {
         </TabsContent>
       </Tabs>
       
-      <Sheet open={isSourceSheetOpen} onOpenChange={setIsSourceSheetOpen}>
-        <SheetContent className="w-full sm:max-w-md">
+      <Sheet 
+        open={isSourceSheetOpen} 
+        onOpenChange={setIsSourceSheetOpen}
+      >
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle>
               {isEditingSource ? "Edit Source" : "Add New Source"}
@@ -767,7 +770,7 @@ const AutomatedPublishing = () => {
                 <SelectTrigger id="sourceType">
                   <SelectValue placeholder="Select source type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="z-50">
                   <SelectItem value="manual">Manual Titles</SelectItem>
                   <SelectItem value="rss">RSS Feed</SelectItem>
                   <SelectItem value="file">Upload File</SelectItem>
@@ -803,7 +806,7 @@ const AutomatedPublishing = () => {
             {newSourceType === "file" && (
               <div className="space-y-2">
                 <Label>File Type</Label>
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 relative">
                   <Button
                     type="button"
                     variant={fileType === "txt" ? "default" : "outline"}
@@ -885,7 +888,7 @@ const AutomatedPublishing = () => {
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="z-50">
                   <SelectItem value="general">General</SelectItem>
                   <SelectItem value="technology">Technology</SelectItem>
                   <SelectItem value="health">Health</SelectItem>
