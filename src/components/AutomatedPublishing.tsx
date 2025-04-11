@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useInterval } from "@/hooks/useInterval";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,22 +58,19 @@ const AutomatedPublishing = () => {
     "Write a comprehensive, well-researched article with the following title: '{TITLE}'. Format your response with proper HTML tags including h2, h3 for headings, <ul> and <li> for lists, and <p> tags for paragraphs. The article should be informative, factual, and engaging for readers."
   );
   const [activeTab, setActiveTab] = useState("sources");
-  
-  // Add states for editing functionality
-  const [isEditingSource, setIsEditingSource] = useState(false);
-  const [editSourceId, setEditSourceId] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [sourceToDelete, setSourceToDelete] = useState<string | null>(null);
-  const [isSourceSheetOpen, setIsSourceSheetOpen] = useState(false);
+  const [processingTitles, setProcessingTitles] = useState<string[]>([]);
+  const [currentProcessingIndex, setCurrentProcessingIndex] = useState<number | null>(null);
+  const [processingSourceId, setProcessingSourceId] = useState<string | null>(null);
+  const [totalTitlesToProcess, setTotalTitlesToProcess] = useState<number>(0);
+  const [titlesProcessed, setTitlesProcessed] = useState<number>(0);
   
   useEffect(() => {
     if (sources.length === 0) {
-      // Create a properly typed automation source
       const initialSources: AutomationSource[] = [
         {
           id: uuidv4(),
           name: "Demo Manual Source",
-          type: "manual" as const, // Use 'as const' to ensure correct typing
+          type: "manual" as const,
           titles: ["The Future of AI in Content Creation", "10 Ways to Improve Your Website SEO", "Digital Marketing Trends for 2023"],
           createdAt: new Date().toISOString(),
           lastProcessed: null,
@@ -149,13 +145,12 @@ const AutomatedPublishing = () => {
         processFileForTitles(uploadedFile).then(extractedTitles => {
           if (extractedTitles && extractedTitles.length > 0) {
             if (isEditingSource && editSourceId) {
-              // Update existing source with correct typing
               const updatedSources = sources.map(source => {
                 if (source.id === editSourceId) {
                   return {
                     ...source,
                     name: newSourceName,
-                    type: "manual" as const, // Use 'as const' for proper type
+                    type: "manual" as const,
                     titles: extractedTitles,
                   };
                 }
@@ -169,11 +164,10 @@ const AutomatedPublishing = () => {
                 description: `${newSourceName} has been updated with ${extractedTitles.length} titles.`,
               });
             } else {
-              // Add new source with correct typing
               const newSource: AutomationSource = {
                 id: uuidv4(),
                 name: newSourceName,
-                type: "manual" as const, // Use 'as const' for proper type
+                type: "manual" as const,
                 titles: extractedTitles,
                 createdAt: new Date().toISOString(),
                 lastProcessed: null,
@@ -201,13 +195,12 @@ const AutomatedPublishing = () => {
       }
       
       if (isEditingSource && editSourceId) {
-        // Update existing source with correct typing
         const updatedSources = sources.map(source => {
           if (source.id === editSourceId) {
             return {
               ...source,
               name: newSourceName,
-              type: newSourceType, // This is already correctly typed from the state
+              type: newSourceType,
               url: newSourceType === "rss" ? newSourceUrl : undefined,
               titles: processedTitles,
             };
@@ -222,11 +215,10 @@ const AutomatedPublishing = () => {
           description: `${newSourceName} has been updated.`,
         });
       } else {
-        // Add new source with correct typing
         const newSource: AutomationSource = {
           id: uuidv4(),
           name: newSourceName,
-          type: newSourceType, // This is already correctly typed from the state
+          type: newSourceType,
           url: newSourceType === "rss" ? newSourceUrl : undefined,
           titles: processedTitles,
           createdAt: new Date().toISOString(),
@@ -343,7 +335,9 @@ const AutomatedPublishing = () => {
     setLastManualRun(new Date().toISOString());
     
     try {
-      for (const source of sources.filter(s => s.isActive)) {
+      const activeSources = sources.filter(s => s.isActive);
+      
+      for (const source of activeSources) {
         await processSource(source);
       }
       
@@ -360,11 +354,18 @@ const AutomatedPublishing = () => {
       });
     } finally {
       setIsRunningAction(false);
+      setProcessingSourceId(null);
+      setCurrentProcessingIndex(null);
+      setProcessingTitles([]);
+      setTitlesProcessed(0);
+      setTotalTitlesToProcess(0);
     }
   };
   
   const processSource = async (source: AutomationSource) => {
     if (!source.isActive) return;
+    
+    setProcessingSourceId(source.id);
     
     const logId = uuidv4();
     
@@ -380,32 +381,51 @@ const AutomatedPublishing = () => {
       });
       
       if (source.type === "manual" && source.titles && source.titles.length > 0) {
-        const randomIndex = Math.floor(Math.random() * source.titles.length);
-        const title = source.titles[randomIndex];
+        setProcessingTitles([...source.titles]);
+        setTotalTitlesToProcess(source.titles.length);
+        setTitlesProcessed(0);
         
-        const result = await generateArticle(title);
-        
-        if (result.success) {
+        for (let i = 0; i < source.titles.length; i++) {
+          setCurrentProcessingIndex(i);
+          const title = source.titles[i];
+          
+          const titleLogId = uuidv4();
           addLog({
-            id: uuidv4(),
+            id: titleLogId,
             sourceId: source.id,
             sourceName: source.name,
-            title,
-            status: "success",
+            title: title,
+            status: "processing",
             timestamp: new Date().toISOString(),
-            message: `Generated article from title: ${title}`,
-            articleId: result.articleId,
+            message: `Processing title: ${title} (${i+1}/${source.titles.length})`,
           });
-        } else {
-          addLog({
-            id: uuidv4(),
-            sourceId: source.id,
-            sourceName: source.name,
-            title,
-            status: "failed",
-            timestamp: new Date().toISOString(),
-            message: `Failed to generate article: ${result.error || "Unknown error"}`,
-          });
+          
+          const result = await generateArticle(title);
+          
+          if (result.success) {
+            addLog({
+              id: uuidv4(),
+              sourceId: source.id,
+              sourceName: source.name,
+              title,
+              status: "success",
+              timestamp: new Date().toISOString(),
+              message: `Generated article from title: ${title} (${i+1}/${source.titles.length})`,
+              articleId: result.articleId,
+            });
+          } else {
+            addLog({
+              id: uuidv4(),
+              sourceId: source.id,
+              sourceName: source.name,
+              title,
+              status: "failed",
+              timestamp: new Date().toISOString(),
+              message: `Failed to generate article: ${result.error || "Unknown error"}`,
+            });
+          }
+          
+          setTitlesProcessed(i + 1);
         }
       }
       
@@ -564,6 +584,10 @@ const AutomatedPublishing = () => {
     }
   };
   
+  const sortedLogs = [...logs].sort((a, b) => {
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+  });
+  
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -605,7 +629,11 @@ const AutomatedPublishing = () => {
             {isRunningAction ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Processing...
+                {processingTitles.length > 0 ? (
+                  `Processing ${titlesProcessed}/${totalTitlesToProcess}...`
+                ) : (
+                  "Processing..."
+                )}
               </>
             ) : (
               <>
@@ -622,6 +650,43 @@ const AutomatedPublishing = () => {
           <Clock className="mr-2 h-4 w-4" />
           Last run: {format(new Date(lastManualRun), "MMM d, yyyy - h:mm a")}
         </div>
+      )}
+      
+      {isRunningAction && processingSourceId && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h3 className="font-medium text-blue-700 flex items-center">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing articles
+                </h3>
+                <p className="text-sm text-blue-600">
+                  {processingTitles.length > 0 ? (
+                    `Processing ${titlesProcessed}/${totalTitlesToProcess} articles`
+                  ) : (
+                    "Preparing articles for processing..."
+                  )}
+                </p>
+              </div>
+              <div>
+                {titlesProcessed > 0 && totalTitlesToProcess > 0 && (
+                  <p className="text-lg font-bold text-blue-700">
+                    {Math.round((titlesProcessed / totalTitlesToProcess) * 100)}%
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            {currentProcessingIndex !== null && processingTitles.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-blue-200">
+                <p className="text-sm text-blue-600 font-medium">
+                  Current article: {processingTitles[currentProcessingIndex]}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -1059,7 +1124,7 @@ const AutomatedPublishing = () => {
               </Button>
             </CardHeader>
             <CardContent>
-              {logs.length === 0 ? (
+              {sortedLogs.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">No logs available yet.</p>
               ) : (
                 <Table>
@@ -1072,7 +1137,7 @@ const AutomatedPublishing = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {logs.map(log => (
+                    {sortedLogs.map(log => (
                       <TableRow key={log.id}>
                         <TableCell className="font-medium">{log.sourceName}</TableCell>
                         <TableCell>
