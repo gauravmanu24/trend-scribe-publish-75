@@ -12,7 +12,7 @@ export interface Article {
   id: string;
   title: string;
   content: string;
-  status: "draft" | "generated" | "published" | "failed" | "pending" | "processing";
+  status: "draft" | "generated" | "published" | "failed" | "pending" | "processing" | "external";
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
@@ -21,6 +21,7 @@ export interface Article {
   category: string;
   wordpressPostId: string | null;
   wordpressPostUrl: string | null;
+  customPrompt?: string;
 }
 
 export interface AutomationSource {
