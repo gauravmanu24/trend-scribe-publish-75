@@ -187,6 +187,7 @@ const AutomatedPublishing = () => {
     setNewSourceUrl("");
     setNewSourceType("manual");
     setNewSourceTitles("");
+    setUploadedFile(null);
   };
 
   const handleEditSource = (id: string) => {
@@ -447,6 +448,20 @@ const AutomatedPublishing = () => {
     },
     isPolling ? pollingInterval * 60 * 1000 : null
   );
+
+  const handleSheetOpenChange = (open: boolean) => {
+    setIsSourceSheetOpen(open);
+    
+    if (!open && !isAddingSource) {
+      setIsEditingSource(false);
+      setEditSourceId(null);
+      setNewSourceName("");
+      setNewSourceUrl("");
+      setNewSourceType("manual");
+      setNewSourceTitles("");
+      setUploadedFile(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -736,7 +751,7 @@ const AutomatedPublishing = () => {
       
       <Sheet 
         open={isSourceSheetOpen} 
-        onOpenChange={setIsSourceSheetOpen}
+        onOpenChange={handleSheetOpenChange}
       >
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>
@@ -917,6 +932,9 @@ const AutomatedPublishing = () => {
           </div>
           
           <SheetFooter>
+            <SheetClose asChild>
+              <Button variant="outline" className="mr-2">Cancel</Button>
+            </SheetClose>
             <Button
               type="submit"
               onClick={handleAddSource}
