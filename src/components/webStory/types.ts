@@ -29,3 +29,9 @@ export interface WebStoryFrame {
   shapes?: ShapeElement[];
   textElements?: TextElement[];
 }
+
+export interface ElementSelection {
+  type: 'shape' | 'text';
+  element: ShapeElement | TextElement;
+}
+

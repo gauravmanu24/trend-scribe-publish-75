@@ -1,40 +1,15 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
-
-interface ShapeElement {
-  type: 'rect' | 'circle' | 'triangle';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-  text?: string;
-  rotation?: number;
-  id: string;
-}
-
-interface TextElement {
-  text: string;
-  x: number;
-  y: number;
-  color: string;
-  fontSize: number;
-  rotation?: number;
-  id: string;
-}
+import { ShapeElement, TextElement, ElementSelection } from "./types";
 
 interface ElementEditorProps {
   frameIndex: number;
   selectedElementId: string | null;
-  getSelectedElement: (frameIndex: number, elementId: string | null) => { 
-    type: 'shape' | 'text'; 
-    element: ShapeElement | TextElement 
-  } | null;
+  getSelectedElement: (frameIndex: number, elementId: string | null) => ElementSelection | null;
   updateShapeProperties: (frameIndex: number, shapeId: string, updates: Partial<ShapeElement>) => void;
   updateTextProperties: (frameIndex: number, textId: string, updates: Partial<TextElement>) => void;
   deleteElement: (frameIndex: number, elementId: string) => void;

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -8,37 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import ElementEditor from "./ElementEditor";
 import ElementsList from "./ElementsList";
-
-interface ShapeElement {
-  type: 'rect' | 'circle' | 'triangle';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-  text?: string;
-  rotation?: number;
-  id: string;
-}
-
-interface TextElement {
-  text: string;
-  x: number;
-  y: number;
-  color: string;
-  fontSize: number;
-  rotation?: number;
-  id: string;
-}
-
-interface WebStoryFrame {
-  image: string;
-  text: string;
-  animation: string;
-  backgroundColor: string;
-  shapes?: ShapeElement[];
-  textElements?: TextElement[];
-}
+import { ShapeElement, TextElement, WebStoryFrame, ElementSelection } from "./types";
 
 interface FrameEditorProps {
   frame: WebStoryFrame;
@@ -57,10 +26,7 @@ interface FrameEditorProps {
   updateShapeProperties: (frameIndex: number, shapeId: string, updates: Partial<ShapeElement>) => void;
   updateTextProperties: (frameIndex: number, textId: string, updates: Partial<TextElement>) => void;
   deleteElement: (frameIndex: number, elementId: string) => void;
-  getSelectedElement: (frameIndex: number, elementId: string | null) => { 
-    type: 'shape' | 'text'; 
-    element: ShapeElement | TextElement 
-  } | null;
+  getSelectedElement: (frameIndex: number, elementId: string | null) => ElementSelection | null;
   totalFrames: number;
 }
 

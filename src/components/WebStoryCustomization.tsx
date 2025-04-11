@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StoryControls from "./webStory/StoryControls";
 import FrameEditor from "./webStory/FrameEditor";
-import { WebStoryFrame, ShapeElement, TextElement } from "./webStory/types";
+import { WebStoryFrame, ShapeElement, TextElement, ElementSelection } from "./webStory/types";
 
 interface WebStoryCustomizationProps {
   storyTitle: string;
@@ -197,7 +196,7 @@ const WebStoryCustomization: React.FC<WebStoryCustomizationProps> = ({
     setSelectedElementId(null);
   };
 
-  const getSelectedElement = (frameIndex: number, elementId: string | null) => {
+  const getSelectedElement = (frameIndex: number, elementId: string | null): ElementSelection | null => {
     if (!elementId) return null;
     
     const frame = storyFrames[frameIndex];
