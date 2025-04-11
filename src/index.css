@@ -6,51 +6,65 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
-    --primary: 77 100% 60%;
-    --primary-foreground: 0 0% 10%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 77 100% 60%;
-    --muted: 77 20% 90%;
-    --muted-foreground: 0 0% 30%;
-    --accent: 77 80% 60%;
-    --accent-foreground: 0 0% 10%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 214 100% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 214 40% 96.1%;
+    --secondary-foreground: 214 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 214 40% 96.1%;
+    --accent-foreground: 214 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 77 20% 80%;
-    --input: 0 0% 80%;
-    --ring: 77 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 214 100% 50%;
     --radius: 0.5rem;
-    --lime-green: 77 90% 60%;
-    --charcoal: 0 0% 15%;
+    --news-100: 214 100% 96%;
+    --news-200: 214 100% 90%;
+    --news-300: 214 100% 80%;
+    --news-400: 214 100% 70%;
+    --news-500: 214 100% 60%;
+    --news-600: 214 100% 50%;
+    --news-700: 214 100% 40%;
+    --news-800: 214 100% 30%;
+    --news-900: 214 100% 20%;
   }
  
   .dark {
-    --background: 0 0% 15%;
-    --foreground: 77 90% 60%;
-    --card: 0 0% 15%;
-    --card-foreground: 77 90% 60%;
-    --popover: 0 0% 15%;
-    --popover-foreground: 77 90% 60%;
-    --primary: 77 90% 60%;
-    --primary-foreground: 0 0% 15%;
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 77 90% 60%;
-    --muted: 0 0% 20%;
-    --muted-foreground: 77 50% 70%;
-    --accent: 77 50% 50%;
-    --accent-foreground: 77 90% 60%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 214 91.2% 70.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 77 90% 60%;
-    --border: 0 0% 25%;
-    --input: 0 0% 25%;
-    --ring: 77 90% 60%;
-    --lime-green: 77 90% 60%;
-    --charcoal: 0 0% 15%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 214 76.5% 68%;
+    --news-100: 214 100% 5%;
+    --news-200: 214 100% 10%;
+    --news-300: 214 100% 20%;
+    --news-400: 214 100% 30%;
+    --news-500: 214 100% 40%;
+    --news-600: 214 100% 50%;
+    --news-700: 214 100% 60%;
+    --news-800: 214 100% 70%;
+    --news-900: 214 100% 80%;
   }
 }
  
@@ -71,39 +85,34 @@
   background-color: #f5f7fa;
 }
 
-.dark .bg-ai-writer {
-  background-color: #1A1F2C;
-  color: #e0e0e0;
-}
-
 .btn-gradient-primary {
-  background: linear-gradient(to right, #bada55, #9cc613);
+  background: linear-gradient(to right, #3B82F6, #2563EB);
 }
 
 .btn-gradient-primary:hover {
-  background: linear-gradient(to right, #9cc613, #87ad0e);
+  background: linear-gradient(to right, #2563EB, #1D4ED8);
 }
 
 .btn-blue {
-  background-color: #bada55;
-  color: #1A1F2C;
+  background-color: #3B82F6;
+  color: white;
   transition: background-color 0.2s;
 }
 
 .btn-blue:hover {
-  background-color: #9cc613;
+  background-color: #2563EB;
 }
 
 .btn-outline-blue {
-  border: 1px solid #bada55;
-  color: #bada55;
+  border: 1px solid #3B82F6;
+  color: #3B82F6;
   background-color: transparent;
   transition: all 0.2s;
 }
 
 .btn-outline-blue:hover {
-  background-color: #bada55;
-  color: #1A1F2C;
+  background-color: #3B82F6;
+  color: white;
 }
 
 .panel-bg {
@@ -111,4 +120,3 @@
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
 }
-
