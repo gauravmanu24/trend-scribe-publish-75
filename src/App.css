@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -102,4 +103,34 @@
   border-right: 50px solid transparent !important;
   border-bottom: 86.6px solid currentColor !important;
   background-color: transparent !important;
+}
+
+/* New styles for the article selector */
+.article-selector-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+  background-color: #f0f7ff;
+  transition: all 0.3s ease;
+}
+
+.article-selector-container:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.article-item {
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.article-item:hover {
+  background-color: #e6f0fd;
+}
+
+.article-item.selected {
+  background-color: #dbeafe;
+  border-left: 3px solid #3b82f6;
 }

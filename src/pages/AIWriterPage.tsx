@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, Loader2, Send, PlusCircle, ImageIcon } from "lucide-react";
+import { AlertCircle, Loader2, Send, PlusCircle, ImageIcon, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,7 @@ import ContentTools from "@/components/ContentTools";
 import ImageGenerator from "@/components/ImageGenerator";
 import RichTextEditor from "@/components/RichTextEditor";
 import { freeAiModels, paidAiModels } from "@/components/AIModels";
+import ExistingArticleSelector from "@/components/ExistingArticleSelector";
 
 const apiIntegrations = [
   {
@@ -84,6 +85,7 @@ const AIWriterPage = () => {
   const [selectedApiModel, setSelectedApiModel] = useState("");
   const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [showAiImageGenerator, setShowAiImageGenerator] = useState(false);
+  const [showExistingArticleSelector, setShowExistingArticleSelector] = useState(false);
   
   const [tone, setTone] = useState("professional");
   const [language, setLanguage] = useState("en");
@@ -406,6 +408,29 @@ const AIWriterPage = () => {
     setShowAiImageGenerator(false);
   };
 
+  const handleExistingArticleSelect = (article: Article) => {
+    setTitle(article.title);
+    setTopic(`Based on original article: ${article.title}`);
+    
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = article.content;
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
+    
+    const contentPreview = textContent.substring(0, 150) + "...";
+    setTopic(`Regenerate from: ${article.title} - ${contentPreview}`);
+    
+    setShowExistingArticleSelector(false);
+    
+    toast({
+      title: "Article selected",
+      description: `Using "${article.title}" as a base for your new article.`,
+    });
+  };
+
+  const toggleExistingArticleSelector = () => {
+    setShowExistingArticleSelector(!showExistingArticleSelector);
+  };
+
   return (
     <div className="max-w-7xl mx-auto bg-ai-writer">
       <h1 className="text-4xl font-bold text-center text-blue-600 mb-6">AI Writer</h1>
@@ -425,6 +450,24 @@ const AIWriterPage = () => {
             <h2 className="text-2xl font-semibold text-blue-600 mb-4">Article Details</h2>
             <div className="panel-bg p-6 h-[480px] overflow-y-auto">
               <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-blue-600">New Article</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center text-blue-600 border-blue-200 hover:bg-blue-50"
+                    onClick={toggleExistingArticleSelector}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    {showExistingArticleSelector ? "Hide Article Selector" : "Generate from Existing Article"}
+                  </Button>
+                </div>
+                
+                <ExistingArticleSelector 
+                  onArticleSelect={handleExistingArticleSelect} 
+                  isVisible={showExistingArticleSelector}
+                />
+                
                 <div className="space-y-2">
                   <Label htmlFor="title" className="text-gray-700">Article Title</Label>
                   <Input 
