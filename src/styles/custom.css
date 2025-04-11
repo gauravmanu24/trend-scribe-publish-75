@@ -208,6 +208,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: border 0.2s ease;
+}
+
+.story-text-element {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  transition: border 0.2s ease;
 }
 
 .shape-rect {

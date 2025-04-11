@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import ElementEditor from "./ElementEditor";
 import ElementsList from "./ElementsList";
+import FramePreview from "./FramePreview";
 import { ShapeElement, TextElement, WebStoryFrame, ElementSelection } from "./types";
 
 interface FrameEditorProps {
@@ -96,13 +98,17 @@ const FrameEditor: React.FC<FrameEditorProps> = ({
         </div>
       </div>
       
-      <div className="aspect-[9/16] relative rounded-md overflow-hidden bg-muted">
-        <img 
-          src={frame.image} 
-          alt={`Frame ${index + 1}`}
-          className="w-full h-full object-cover"
-        />
-      </div>
+      <FramePreview 
+        frameImage={frame.image}
+        backgroundColor={frame.backgroundColor}
+        shapes={frame.shapes}
+        textElements={frame.textElements}
+        selectedElementId={selectedElementId}
+        setSelectedElementId={setSelectedElementId}
+        updateShapeProperties={updateShapeProperties}
+        updateTextProperties={updateTextProperties}
+        frameIndex={index}
+      />
       
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "text" | "elements")}>
         <TabsList className="grid w-full grid-cols-2">

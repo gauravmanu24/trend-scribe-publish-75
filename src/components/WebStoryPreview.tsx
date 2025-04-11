@@ -13,6 +13,7 @@ interface ShapeElement {
   color: string;
   text?: string;
   rotation?: number;
+  id: string;
 }
 
 interface TextElement {
@@ -22,6 +23,7 @@ interface TextElement {
   color: string;
   fontSize: number;
   rotation?: number;
+  id: string;
 }
 
 interface WebStoryFrame {
@@ -80,6 +82,8 @@ const WebStoryPreview: React.FC<WebStoryPreviewProps> = ({ title, frames, onClos
       backgroundColor: shape.type !== 'triangle' ? shape.color : undefined,
       color: shape.type === 'triangle' ? shape.color : undefined,
       transform: shape.rotation ? `rotate(${shape.rotation}deg)` : undefined,
+      position: 'absolute' as 'absolute',
+      zIndex: 5,
     };
 
     let shapeClass = "story-shape";
@@ -105,12 +109,16 @@ const WebStoryPreview: React.FC<WebStoryPreviewProps> = ({ title, frames, onClos
       color: textElement.color,
       fontSize: `${textElement.fontSize}px`,
       transform: textElement.rotation ? `rotate(${textElement.rotation}deg)` : undefined,
+      position: 'absolute' as 'absolute',
+      zIndex: 5,
+      maxWidth: '90%',
+      wordBreak: 'break-word' as 'break-word',
     };
 
     return (
       <div 
         key={`text-${index}`} 
-        className={`story-shape ${getAnimationClass(frames[currentIndex].animation)}`}
+        className={`story-text-element ${getAnimationClass(frames[currentIndex].animation)}`}
         style={style}
       >
         {textElement.text}
