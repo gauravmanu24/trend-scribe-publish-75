@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -61,7 +60,13 @@ const ExistingArticleSelector: React.FC<ExistingArticleProps> = ({
       content: externalArticle,
       sourceTitle: "External Source",
       sourceLink: null,
-      status: "external" as any,
+      status: "external" as Article["status"],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      publishedAt: null,
+      category: "general",
+      wordpressPostId: null,
+      wordpressPostUrl: null,
       customPrompt: customPrompt || undefined
     };
     
