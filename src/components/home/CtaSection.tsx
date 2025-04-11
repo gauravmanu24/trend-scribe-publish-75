@@ -23,6 +23,9 @@ const CtaSection = () => {
             <Link to="/auth">Get Started Now</Link>
           </Button>
         )}
+        <p className="mt-12 attribution">
+          © {new Date().getFullYear()} All Rights Reserved. This lovely tool developed by <span className="attribution-name">Gaurav Srivastava</span>
+        </p>
       </div>
     </section>
   );
