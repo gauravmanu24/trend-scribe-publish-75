@@ -4,14 +4,38 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
+interface ShapeElement {
+  type: 'rect' | 'circle' | 'triangle';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+  text?: string;
+  rotation?: number;
+}
+
+interface TextElement {
+  text: string;
+  x: number;
+  y: number;
+  color: string;
+  fontSize: number;
+  rotation?: number;
+}
+
+interface WebStoryFrame {
+  image: string;
+  text: string;
+  animation: string;
+  backgroundColor: string;
+  shapes?: ShapeElement[];
+  textElements?: TextElement[];
+}
+
 interface WebStoryPreviewProps {
   title: string;
-  frames: {
-    image: string;
-    text: string;
-    animation: string;
-    backgroundColor: string;
-  }[];
+  frames: WebStoryFrame[];
   onClose: () => void;
 }
 
@@ -47,6 +71,53 @@ const WebStoryPreview: React.FC<WebStoryPreviewProps> = ({ title, frames, onClos
     }
   };
 
+  const renderShape = (shape: ShapeElement, index: number) => {
+    const style = {
+      left: `${shape.x}%`,
+      top: `${shape.y}%`,
+      width: `${shape.width}px`,
+      height: `${shape.height}px`,
+      backgroundColor: shape.type !== 'triangle' ? shape.color : undefined,
+      color: shape.type === 'triangle' ? shape.color : undefined,
+      transform: shape.rotation ? `rotate(${shape.rotation}deg)` : undefined,
+    };
+
+    let shapeClass = "story-shape";
+    if (shape.type === 'rect') shapeClass += " shape-rect";
+    if (shape.type === 'circle') shapeClass += " shape-circle";
+    if (shape.type === 'triangle') shapeClass += " shape-triangle";
+
+    return (
+      <div 
+        key={`shape-${index}`} 
+        className={`${shapeClass} ${getAnimationClass(frames[currentIndex].animation)}`}
+        style={style}
+      >
+        {shape.text && <span>{shape.text}</span>}
+      </div>
+    );
+  };
+
+  const renderTextElement = (textElement: TextElement, index: number) => {
+    const style = {
+      left: `${textElement.x}%`,
+      top: `${textElement.y}%`,
+      color: textElement.color,
+      fontSize: `${textElement.fontSize}px`,
+      transform: textElement.rotation ? `rotate(${textElement.rotation}deg)` : undefined,
+    };
+
+    return (
+      <div 
+        key={`text-${index}`} 
+        className={`story-shape ${getAnimationClass(frames[currentIndex].animation)}`}
+        style={style}
+      >
+        {textElement.text}
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md overflow-hidden">
@@ -67,6 +138,13 @@ const WebStoryPreview: React.FC<WebStoryPreviewProps> = ({ title, frames, onClos
               alt={`Story frame ${currentIndex + 1}`}
               className={`w-full h-full object-cover ${getAnimationClass(frames[currentIndex].animation)}`}
             />
+            
+            {/* Render custom shapes if they exist */}
+            {frames[currentIndex].shapes?.map((shape, index) => renderShape(shape, index))}
+            
+            {/* Render custom text elements if they exist */}
+            {frames[currentIndex].textElements?.map((textElement, index) => renderTextElement(textElement, index))}
+            
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
               <p className="text-white font-medium text-lg">
                 {frames[currentIndex].text}
