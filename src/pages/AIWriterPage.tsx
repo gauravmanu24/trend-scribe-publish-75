@@ -417,7 +417,12 @@ const AIWriterPage = () => {
     const textContent = tempDiv.textContent || tempDiv.innerText || "";
     
     const contentPreview = textContent.substring(0, 150) + "...";
-    setTopic(`Regenerate from: ${article.title} - ${contentPreview}`);
+    
+    if (article.customPrompt) {
+      setTopic(`Custom instruction: ${article.customPrompt}\n\nSource: ${article.title} - ${contentPreview}`);
+    } else {
+      setTopic(`Regenerate from: ${article.title} - ${contentPreview}`);
+    }
     
     setShowExistingArticleSelector(false);
     
