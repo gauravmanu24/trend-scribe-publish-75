@@ -1,28 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
+
+import React, { useState } from "react";
 import { useInterval } from "@/hooks/useInterval";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { 
-  Check, Clock, RefreshCw, MoreHorizontal, AlertCircle, X, Plus, Loader2, 
-  Play, PlusCircle, Upload, FileText, FileSpreadsheet, Edit, Trash2 
-} from "lucide-react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { format } from "date-fns";
-import { useAppStore } from "@/lib/store";
+import { PlusCircle, Play, Loader2 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AutomationLog, AutomationSource, Article } from "@/types";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
+import { useAppStore } from "@/lib/store";
+
+// Import our new components
+import AutomationSourceForm from "./automation/AutomationSourceForm";
+import AutomationLogsList from "./automation/AutomationLogsList";
+import AutomationSourcesList from "./automation/AutomationSourcesList";
+import AutomationProcessingCard from "./automation/AutomationProcessingCard";
+import DeleteSourceDialog from "./automation/DeleteSourceDialog";
 
 const AutomatedPublishing = () => {
   const { toast } = useToast();
@@ -42,189 +36,20 @@ const AutomatedPublishing = () => {
   const wordPressConfig = useAppStore((state) => state.wordPressConfig);
   const openRouterConfig = useAppStore((state) => state.openRouterConfig);
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
   const [isEditingSource, setIsEditingSource] = useState(false);
   const [editSourceId, setEditSourceId] = useState<string | null>(null);
   const [isSourceSheetOpen, setIsSourceSheetOpen] = useState(false);
   const [sourceToDelete, setSourceToDelete] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  const [newSourceName, setNewSourceName] = useState("");
-  const [newSourceType, setNewSourceType] = useState<"rss" | "sheets" | "manual" | "file">("manual");
-  const [newSourceUrl, setNewSourceUrl] = useState("");
-  const [newSourceTitles, setNewSourceTitles] = useState("");
-  const [isAddingSource, setIsAddingSource] = useState(false);
+  
   const [isRunningAction, setIsRunningAction] = useState(false);
   const [autoPublish, setAutoPublish] = useState(false);
-  const [language, setLanguage] = useState("en");
-  const [tone, setTone] = useState("professional");
-  const [wordCount, setWordCount] = useState("800");
-  const [category, setCategory] = useState("general");
-  const [fileType, setFileType] = useState<"txt" | "excel" | "csv">("txt");
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [customPrompt, setCustomPrompt] = useState(
-    "Write a comprehensive, well-researched article with the following title: '{TITLE}'. Format your response with proper HTML tags including h2, h3 for headings, <ul> and <li> for lists, and <p> tags for paragraphs. The article should be informative, factual, and engaging for readers."
-  );
   const [activeTab, setActiveTab] = useState("sources");
   const [processingTitles, setProcessingTitles] = useState<string[]>([]);
   const [currentProcessingIndex, setCurrentProcessingIndex] = useState<number | null>(null);
   const [processingSourceId, setProcessingSourceId] = useState<string | null>(null);
   const [totalTitlesToProcess, setTotalTitlesToProcess] = useState<number>(0);
   const [titlesProcessed, setTitlesProcessed] = useState<number>(0);
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-    
-    const file = files[0];
-    setUploadedFile(file);
-    
-    toast({
-      title: "File uploaded",
-      description: `${file.name} has been uploaded successfully`,
-    });
-    
-    if (fileType === "txt") {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        if (content) {
-          const lines = content.split('\n').filter(line => line.trim().length > 0);
-          setNewSourceTitles(lines.join('\n'));
-          toast({
-            title: "Titles extracted",
-            description: `${lines.length} titles extracted from file`,
-          });
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const triggerFileUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleAddSource = async () => {
-    if (!newSourceName) {
-      toast({
-        title: "Source name required",
-        description: "Please provide a name for this source",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isEditingSource && editSourceId) {
-      const sourceToUpdate = sources.find((s) => s.id === editSourceId);
-      if (sourceToUpdate) {
-        const updatedSources = sources.map((s) => 
-          s.id === editSourceId 
-            ? {
-                ...s,
-                name: newSourceName,
-                type: newSourceType,
-                url: newSourceType === "rss" ? newSourceUrl : s.url,
-                titles: newSourceType === "manual" 
-                  ? newSourceTitles.split("\n").filter((t) => t.trim().length > 0)
-                  : s.titles,
-              }
-            : s
-        );
-        
-        setSources(updatedSources);
-        
-        toast({
-          title: "Source updated",
-          description: `${newSourceName} has been updated successfully`,
-        });
-      }
-    } else {
-      setIsAddingSource(true);
-      
-      try {
-        let titles: string[] = [];
-        
-        if (newSourceType === "manual") {
-          titles = newSourceTitles
-            .split("\n")
-            .filter((title) => title.trim().length > 0);
-        }
-        
-        const newSource: AutomationSource = {
-          id: uuidv4(),
-          name: newSourceName,
-          type: newSourceType,
-          url: newSourceType === "rss" ? newSourceUrl : undefined,
-          titles: newSourceType === "manual" ? titles : [],
-          createdAt: new Date().toISOString(),
-          lastProcessed: null,
-          isActive: true,
-        };
-        
-        setSources([...sources, newSource]);
-        
-        toast({
-          title: "Source created",
-          description: `${newSourceName} has been added successfully`,
-        });
-      } catch (error) {
-        toast({
-          title: "Failed to add source",
-          description: error instanceof Error ? error.message : "Unknown error occurred",
-          variant: "destructive",
-        });
-      } finally {
-        setIsAddingSource(false);
-      }
-    }
-    
-    setIsEditingSource(false);
-    setEditSourceId(null);
-    setIsSourceSheetOpen(false);
-    setNewSourceName("");
-    setNewSourceUrl("");
-    setNewSourceType("manual");
-    setNewSourceTitles("");
-    setUploadedFile(null);
-  };
-
-  const handleEditSource = (id: string) => {
-    const sourceToEdit = sources.find((s) => s.id === id);
-    if (sourceToEdit) {
-      setEditSourceId(id);
-      setIsEditingSource(true);
-      
-      setNewSourceName(sourceToEdit.name);
-      setNewSourceType(sourceToEdit.type);
-      if (sourceToEdit.url) setNewSourceUrl(sourceToEdit.url);
-      if (sourceToEdit.titles) setNewSourceTitles(sourceToEdit.titles.join("\n"));
-      
-      setIsSourceSheetOpen(true);
-    }
-  };
-
-  const handleDeleteSource = (id: string) => {
-    setSourceToDelete(id);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDeleteSource = () => {
-    if (sourceToDelete) {
-      const sourceName = sources.find((s) => s.id === sourceToDelete)?.name || "Source";
-      const updatedSources = sources.filter((s) => s.id !== sourceToDelete);
-      setSources(updatedSources);
-      
-      toast({
-        title: "Source deleted",
-        description: `${sourceName} has been removed`,
-      });
-    }
-    
-    setSourceToDelete(null);
-    setIsDeleteDialogOpen(false);
-  };
 
   const processNextTitle = async (sourceId: string, titles: string[], index: number) => {
     if (index >= titles.length) {
@@ -285,10 +110,10 @@ const AutomatedPublishing = () => {
         publishedAt: null,
         sourceTitle: title,
         sourceLink: null,
-        category: category,
+        category: "general",
         wordpressPostId: null,
         wordpressPostUrl: null,
-        customPrompt: customPrompt,
+        customPrompt: "",
       });
       
       addLog({
@@ -449,18 +274,34 @@ const AutomatedPublishing = () => {
     isPolling ? pollingInterval * 60 * 1000 : null
   );
 
-  const handleSheetOpenChange = (open: boolean) => {
-    setIsSourceSheetOpen(open);
-    
-    if (!open && !isAddingSource) {
-      setIsEditingSource(false);
-      setEditSourceId(null);
-      setNewSourceName("");
-      setNewSourceUrl("");
-      setNewSourceType("manual");
-      setNewSourceTitles("");
-      setUploadedFile(null);
+  const handleEditSource = (id: string) => {
+    const sourceToEdit = sources.find((s) => s.id === id);
+    if (sourceToEdit) {
+      setEditSourceId(id);
+      setIsEditingSource(true);
+      setIsSourceSheetOpen(true);
     }
+  };
+
+  const handleDeleteSource = (id: string) => {
+    setSourceToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteSource = () => {
+    if (sourceToDelete) {
+      const sourceName = sources.find((s) => s.id === sourceToDelete)?.name || "Source";
+      const updatedSources = sources.filter((s) => s.id !== sourceToDelete);
+      setSources(updatedSources);
+      
+      toast({
+        title: "Source deleted",
+        description: `${sourceName} has been removed`,
+      });
+    }
+    
+    setSourceToDelete(null);
+    setIsDeleteDialogOpen(false);
   };
 
   return (
@@ -514,30 +355,15 @@ const AutomatedPublishing = () => {
         </div>
       </div>
 
-      {isRunningAction && processingSourceId && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium flex items-center">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin text-blue-500" />
-                  Processing articles
-                </h3>
-                <Badge variant="outline" className="bg-blue-100">
-                  {titlesProcessed} of {totalTitlesToProcess}
-                </Badge>
-              </div>
-              
-              <div className="text-sm">
-                <p>Source: {sources.find(s => s.id === processingSourceId)?.name}</p>
-                {currentProcessingIndex !== null && processingTitles[currentProcessingIndex] && (
-                  <p className="font-medium mt-1">Current: {processingTitles[currentProcessingIndex]}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <AutomationProcessingCard 
+        isRunningAction={isRunningAction}
+        processingSourceId={processingSourceId}
+        sources={sources}
+        titlesProcessed={titlesProcessed}
+        totalTitlesToProcess={totalTitlesToProcess}
+        currentProcessingIndex={currentProcessingIndex}
+        processingTitles={processingTitles}
+      />
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
@@ -546,429 +372,44 @@ const AutomatedPublishing = () => {
         </TabsList>
         
         <TabsContent value="sources" className="space-y-4">
-          {sources.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                <div className="rounded-full bg-primary/10 p-3 mb-4">
-                  <PlusCircle className="h-6 w-6 text-primary"/>
-                </div>
-                <h3 className="font-semibold text-lg mb-2">No sources added yet</h3>
-                <p className="text-muted-foreground mb-4 max-w-md">
-                  Create your first content source to start automating your content generation and publishing workflow.
-                </p>
-                <Button onClick={() => setIsSourceSheetOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add First Source
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4">
-              {sources.map((source) => (
-                <Card key={source.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="flex items-center">
-                          {source.name}
-                          {!source.isActive && (
-                            <Badge variant="outline" className="ml-2 bg-gray-100">
-                              Inactive
-                            </Badge>
-                          )}
-                        </CardTitle>
-                        <CardDescription>
-                          {source.type === "rss" && "RSS Feed"}
-                          {source.type === "manual" && "Manual Titles"}
-                          {source.type === "sheets" && "Google Sheets"}
-                          {source.type === "file" && "Uploaded File"}
-                          
-                          {source.lastProcessed && (
-                            <span className="ml-2">
-                              • Last run: {format(new Date(source.lastProcessed), "MMM d, yyyy HH:mm")}
-                            </span>
-                          )}
-                        </CardDescription>
-                      </div>
-                      
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditSource(source.id)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleSourceStatus(source.id)}>
-                            {source.isActive ? (
-                              <>
-                                <X className="mr-2 h-4 w-4" />
-                                Deactivate
-                              </>
-                            ) : (
-                              <>
-                                <Check className="mr-2 h-4 w-4" />
-                                Activate
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteSource(source.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    {source.type === "manual" && source.titles && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Titles ({source.titles.length})</h4>
-                        <div className="text-sm text-muted-foreground mt-1 max-h-20 overflow-y-auto">
-                          {source.titles.slice(0, 3).map((title, i) => (
-                            <div key={i} className="mb-1 truncate">{title}</div>
-                          ))}
-                          {source.titles.length > 3 && (
-                            <div className="text-xs text-muted-foreground">
-                              +{source.titles.length - 3} more titles
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {source.type === "rss" && source.url && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Feed URL</h4>
-                        <div className="text-sm text-muted-foreground truncate">
-                          {source.url}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                  
-                  <CardFooter>
-                    <Button 
-                      onClick={() => handleRunSource(source.id)} 
-                      disabled={isRunningAction || !source.isActive || (source.type === "manual" && (!source.titles || source.titles.length === 0))}
-                      className="w-full"
-                    >
-                      {(isRunningAction && processingSourceId === source.id) ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing {titlesProcessed} of {totalTitlesToProcess}
-                        </>
-                      ) : (
-                        <>
-                          <Play className="mr-2 h-4 w-4" />
-                          Run Now
-                        </>
-                      )}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
+          <AutomationSourcesList 
+            sources={sources}
+            onAddSource={() => setIsSourceSheetOpen(true)}
+            onEditSource={handleEditSource}
+            onDeleteSource={handleDeleteSource}
+            onToggleSourceStatus={toggleSourceStatus}
+            onRunSource={handleRunSource}
+            isRunningAction={isRunningAction}
+            processingSourceId={processingSourceId}
+            titlesProcessed={titlesProcessed}
+            totalTitlesToProcess={totalTitlesToProcess}
+          />
         </TabsContent>
         
         <TabsContent value="logs">
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <CardTitle>Activity Logs</CardTitle>
-                {logs.length > 0 && (
-                  <Button variant="outline" size="sm" onClick={clearLogs}>
-                    Clear Logs
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              {logs.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Clock className="mx-auto h-8 w-8 mb-2 opacity-50" />
-                  <p>No activity logs yet</p>
-                  <p className="text-sm">Run a source to see activity here</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Message</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {[...logs]
-                      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                      .map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="whitespace-nowrap">
-                            {format(new Date(log.timestamp), "HH:mm:ss")}
-                          </TableCell>
-                          <TableCell>{log.sourceName}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">
-                            {log.title}
-                          </TableCell>
-                          <TableCell>
-                            {log.status === "success" && (
-                              <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                                Success
-                              </Badge>
-                            )}
-                            {log.status === "processing" && (
-                              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
-                                Processing
-                              </Badge>
-                            )}
-                            {log.status === "failed" && (
-                              <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
-                                Failed
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="max-w-[300px]">
-                            {log.message}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <AutomationLogsList 
+            logs={logs}
+            clearLogs={clearLogs}
+          />
         </TabsContent>
       </Tabs>
       
-      <Sheet 
-        open={isSourceSheetOpen} 
-        onOpenChange={handleSheetOpenChange}
-      >
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>
-              {isEditingSource ? "Edit Source" : "Add New Source"}
-            </SheetTitle>
-            <SheetDescription>
-              {isEditingSource 
-                ? "Update your automated content source" 
-                : "Create a new automated content source"}
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="sourceName">Source Name</Label>
-              <Input 
-                id="sourceName" 
-                value={newSourceName}
-                onChange={(e) => setNewSourceName(e.target.value)}
-                placeholder="My Content Source"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="sourceType">Source Type</Label>
-              <Select 
-                value={newSourceType} 
-                onValueChange={(value: "rss" | "sheets" | "manual" | "file") => setNewSourceType(value)}
-              >
-                <SelectTrigger id="sourceType">
-                  <SelectValue placeholder="Select source type" />
-                </SelectTrigger>
-                <SelectContent position="popper" className="z-50">
-                  <SelectItem value="manual">Manual Titles</SelectItem>
-                  <SelectItem value="rss">RSS Feed</SelectItem>
-                  <SelectItem value="file">Upload File</SelectItem>
-                  <SelectItem value="sheets">Google Sheets</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {newSourceType === "rss" && (
-              <div className="space-y-2">
-                <Label htmlFor="sourceUrl">RSS Feed URL</Label>
-                <Input 
-                  id="sourceUrl" 
-                  value={newSourceUrl}
-                  onChange={(e) => setNewSourceUrl(e.target.value)}
-                  placeholder="https://example.com/feed.xml"
-                />
-              </div>
-            )}
-            
-            {newSourceType === "sheets" && (
-              <div className="space-y-2">
-                <Label htmlFor="sheetsUrl">Google Sheets URL</Label>
-                <Input 
-                  id="sheetsUrl" 
-                  value={newSourceUrl}
-                  onChange={(e) => setNewSourceUrl(e.target.value)}
-                  placeholder="https://docs.google.com/spreadsheets/d/..."
-                />
-              </div>
-            )}
-            
-            {newSourceType === "file" && (
-              <div className="space-y-2">
-                <Label>File Type</Label>
-                <div className="flex space-x-2 relative">
-                  <Button
-                    type="button"
-                    variant={fileType === "txt" ? "default" : "outline"}
-                    className="flex-1"
-                    onClick={() => setFileType("txt")}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Text
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={fileType === "csv" ? "default" : "outline"}
-                    className="flex-1"
-                    onClick={() => setFileType("csv")}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    CSV
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={fileType === "excel" ? "default" : "outline"}
-                    className="flex-1"
-                    onClick={() => setFileType("excel")}
-                  >
-                    <FileSpreadsheet className="mr-2 h-4 w-4" />
-                    Excel
-                  </Button>
-                </div>
-                
-                <div className="mt-2 relative">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    accept={
-                      fileType === "txt" ? ".txt" : 
-                      fileType === "csv" ? ".csv" : 
-                      ".xlsx,.xls"
-                    }
-                  />
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full"
-                    onClick={triggerFileUpload}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    {uploadedFile ? uploadedFile.name : "Upload File"}
-                  </Button>
-                  {uploadedFile && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      File selected: {uploadedFile.name} ({Math.round(uploadedFile.size / 1024)} KB)
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {newSourceType === "manual" && (
-              <div className="space-y-2">
-                <Label htmlFor="sourceTitles">Article Titles</Label>
-                <Textarea 
-                  id="sourceTitles" 
-                  value={newSourceTitles}
-                  onChange={(e) => setNewSourceTitles(e.target.value)}
-                  placeholder="Enter one title per line"
-                  className="h-40"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Enter one article title per line. These will be used to generate articles.
-                </p>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="category">Default Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent position="popper" className="z-50">
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="technology">Technology</SelectItem>
-                  <SelectItem value="health">Health</SelectItem>
-                  <SelectItem value="business">Business</SelectItem>
-                  <SelectItem value="lifestyle">Lifestyle</SelectItem>
-                  <SelectItem value="entertainment">Entertainment</SelectItem>
-                  <SelectItem value="sports">Sports</SelectItem>
-                  <SelectItem value="science">Science</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="customPrompt">Custom Prompt</Label>
-              <Textarea 
-                id="customPrompt" 
-                value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="Instructions for AI content generation"
-                className="h-24"
-              />
-              <p className="text-xs text-muted-foreground">
-                Use {"{TITLE}"} as a placeholder for the article title
-              </p>
-            </div>
-          </div>
-          
-          <SheetFooter>
-            <SheetClose asChild>
-              <Button variant="outline" className="mr-2">Cancel</Button>
-            </SheetClose>
-            <Button
-              type="submit"
-              onClick={handleAddSource}
-              disabled={isAddingSource}
-            >
-              {isAddingSource ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isEditingSource ? "Updating..." : "Adding..."}
-                </>
-              ) : (
-                <>
-                  {isEditingSource ? "Update Source" : "Add Source"}
-                </>
-              )}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <AutomationSourceForm 
+        isOpen={isSourceSheetOpen}
+        onOpenChange={setIsSourceSheetOpen}
+        sources={sources}
+        setSources={setSources}
+        isEditingSource={isEditingSource}
+        setIsEditingSource={setIsEditingSource}
+        editSourceId={editSourceId}
+        setEditSourceId={setEditSourceId}
+      />
       
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this source and cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteSource}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteSourceDialog 
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={confirmDeleteSource}
+      />
     </div>
   );
 };
