@@ -26,13 +26,49 @@ const FramePreview: React.FC<FramePreviewProps> = ({
   frameIndex
 }) => {
   const [dragging, setDragging] = useState<string | null>(null);
+  const [initialPos, setInitialPos] = useState({ x: 0, y: 0 });
+  const [initialMouse, setInitialMouse] = useState({ x: 0, y: 0 });
   const previewRef = useRef<HTMLDivElement>(null);
+
+  // Handle element selection
+  const handleElementClick = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedElementId(id);
+  };
+  
+  // Handle background click to deselect
+  const handleBackgroundClick = () => {
+    setSelectedElementId("");
+  };
   
   // Handle drag start
   const handleDragStart = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    if (!previewRef.current) return;
+    
     setDragging(id);
     setSelectedElementId(id);
+    
+    const previewRect = previewRef.current.getBoundingClientRect();
+    
+    const isShape = id.startsWith('shape-');
+    
+    // Find the element's current position
+    let element;
+    if (isShape) {
+      element = shapes.find(s => s.id === id);
+    } else {
+      element = textElements.find(t => t.id === id);
+    }
+    
+    if (!element) return;
+    
+    // Save initial positions for relative movement calculation
+    setInitialPos({ x: element.x, y: element.y });
+    setInitialMouse({ x: e.clientX, y: e.clientY });
+    
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
@@ -43,21 +79,21 @@ const FramePreview: React.FC<FramePreviewProps> = ({
     
     const previewRect = previewRef.current.getBoundingClientRect();
     
-    // Calculate position as percentage of frame dimensions
-    const x = ((e.clientX - previewRect.left) / previewRect.width) * 100;
-    const y = ((e.clientY - previewRect.top) / previewRect.height) * 100;
+    // Calculate the delta movement as percentage of frame dimensions
+    const deltaX = ((e.clientX - initialMouse.x) / previewRect.width) * 100;
+    const deltaY = ((e.clientY - initialMouse.y) / previewRect.height) * 100;
     
-    // Limit values to stay within the frame (0-100%)
-    const boundedX = Math.max(0, Math.min(100, x));
-    const boundedY = Math.max(0, Math.min(100, y));
+    // Add delta to the initial position
+    const newX = Math.max(0, Math.min(100, initialPos.x + deltaX));
+    const newY = Math.max(0, Math.min(100, initialPos.y + deltaY));
     
     // Update the element position based on type
     const isShape = dragging.startsWith('shape-');
     
     if (isShape) {
-      updateShapeProperties(frameIndex, dragging, { x: boundedX, y: boundedY });
+      updateShapeProperties(frameIndex, dragging, { x: newX, y: newY });
     } else {
-      updateTextProperties(frameIndex, dragging, { x: boundedX, y: boundedY });
+      updateTextProperties(frameIndex, dragging, { x: newX, y: newY });
     }
   };
   
@@ -88,9 +124,11 @@ const FramePreview: React.FC<FramePreviewProps> = ({
       color: shape.type === 'triangle' ? shape.color : undefined,
       transform: shape.rotation ? `rotate(${shape.rotation}deg)` : undefined,
       border: isSelected ? '2px dashed #32CD32' : 'none',
-      cursor: 'move',
+      cursor: dragging === shape.id ? 'grabbing' : 'grab',
       position: 'absolute' as 'absolute',
       zIndex: isSelected ? 10 : 1,
+      pointerEvents: 'all' as 'all',
+      userSelect: 'none' as 'none',
     };
     
     let shapeClass = "story-shape";
@@ -103,6 +141,7 @@ const FramePreview: React.FC<FramePreviewProps> = ({
         key={shape.id}
         className={shapeClass}
         style={style}
+        onClick={(e) => handleElementClick(shape.id, e)}
         onMouseDown={(e) => handleDragStart(shape.id, e)}
       >
         {shape.text && <span>{shape.text}</span>}
@@ -120,13 +159,15 @@ const FramePreview: React.FC<FramePreviewProps> = ({
       fontSize: `${textElement.fontSize}px`,
       transform: textElement.rotation ? `rotate(${textElement.rotation}deg)` : undefined,
       border: isSelected ? '2px dashed #32CD32' : 'none',
-      cursor: 'move',
+      cursor: dragging === textElement.id ? 'grabbing' : 'grab',
       position: 'absolute' as 'absolute',
       zIndex: isSelected ? 10 : 1,
       backgroundColor: isSelected ? 'rgba(50, 205, 50, 0.1)' : 'transparent',
       padding: '4px',
       maxWidth: '90%',
       wordBreak: 'break-word' as 'break-word',
+      pointerEvents: 'all' as 'all',
+      userSelect: 'none' as 'none',
     };
     
     return (
@@ -134,6 +175,7 @@ const FramePreview: React.FC<FramePreviewProps> = ({
         key={textElement.id}
         className="story-text-element"
         style={style}
+        onClick={(e) => handleElementClick(textElement.id, e)}
         onMouseDown={(e) => handleDragStart(textElement.id, e)}
       >
         {textElement.text}
@@ -146,6 +188,7 @@ const FramePreview: React.FC<FramePreviewProps> = ({
       ref={previewRef}
       className="aspect-[9/16] relative rounded-md overflow-hidden" 
       style={{ backgroundColor }}
+      onClick={handleBackgroundClick}
     >
       <img 
         src={frameImage} 
