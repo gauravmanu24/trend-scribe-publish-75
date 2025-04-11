@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useInterval } from "@/hooks/useInterval";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,87 +92,6 @@ const AutomatedPublishing = () => {
     }
   }, pollingInterval * 60 * 1000);
   
-  const resetSourceForm = () => {
-    setNewSourceName("");
-    setNewSourceType("manual");
-    setNewSourceUrl("");
-    setNewSourceTitles("");
-    setUploadedFile(null);
-    setIsEditingSource(false);
-    setEditSourceId(null);
-    setIsSourceSheetOpen(false);
-  };
-
-  const editSource = (source: AutomationSource) => {
-    setEditSourceId(source.id);
-    setIsEditingSource(true);
-    setNewSourceName(source.name);
-    setNewSourceType(source.type);
-    setNewSourceUrl(source.url || "");
-    setNewSourceTitles(source.titles ? source.titles.join("\n") : "");
-    setIsSourceSheetOpen(true);
-  };
-
-  const confirmDeleteSource = (sourceId: string) => {
-    setSourceToDelete(sourceId);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDeleteSource = () => {
-    if (sourceToDelete) {
-      const sourceToRemove = sources.find(s => s.id === sourceToDelete);
-      const updatedSources = sources.filter(s => s.id !== sourceToDelete);
-      setSources(updatedSources);
-      
-      toast({
-        title: "Source deleted",
-        description: sourceToRemove ? `"${sourceToRemove.name}" has been deleted.` : "The automation source has been deleted.",
-      });
-      
-      setSourceToDelete(null);
-      setIsDeleteDialogOpen(false);
-    }
-  };
-
-  const toggleSourceStatus = (id: string, isActive: boolean) => {
-    setSources(sources.map(s => 
-      s.id === id ? { ...s, isActive } : s
-    ));
-    
-    toast({
-      title: isActive ? "Source activated" : "Source paused",
-      description: `The automation source has been ${isActive ? "activated" : "paused"}.`,
-    });
-  };
-  
-  const deleteSource = (id: string) => {
-    setSources(sources.filter(s => s.id !== id));
-    
-    toast({
-      title: "Source deleted",
-      description: "The automation source has been deleted.",
-    });
-  };
-  
-  const handleIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value) && value > 0) {
-      setPollingInterval(value);
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setUploadedFile(file);
-      toast({
-        title: "File uploaded",
-        description: `${file.name} has been uploaded.`,
-      });
-    }
-  };
-
-  // Add back the addSource function which was missing
   const addSource = () => {
     if (!newSourceName) {
       toast({
@@ -335,7 +255,48 @@ const AutomatedPublishing = () => {
     }
   };
 
-  // Add the processFileForTitles function
+  const resetSourceForm = () => {
+    setNewSourceName("");
+    setNewSourceType("manual");
+    setNewSourceUrl("");
+    setNewSourceTitles("");
+    setUploadedFile(null);
+    setIsEditingSource(false);
+    setEditSourceId(null);
+    setIsSourceSheetOpen(false);
+  };
+
+  const editSource = (source: AutomationSource) => {
+    setEditSourceId(source.id);
+    setIsEditingSource(true);
+    setNewSourceName(source.name);
+    setNewSourceType(source.type);
+    setNewSourceUrl(source.url || "");
+    setNewSourceTitles(source.titles ? source.titles.join("\n") : "");
+    setIsSourceSheetOpen(true);
+  };
+
+  const confirmDeleteSource = (sourceId: string) => {
+    setSourceToDelete(sourceId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSource = () => {
+    if (sourceToDelete) {
+      const sourceToRemove = sources.find(s => s.id === sourceToDelete);
+      const updatedSources = sources.filter(s => s.id !== sourceToDelete);
+      setSources(updatedSources);
+      
+      toast({
+        title: "Source deleted",
+        description: sourceToRemove ? `"${sourceToRemove.name}" has been deleted.` : "The automation source has been deleted.",
+      });
+      
+      setSourceToDelete(null);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
   const processFileForTitles = async (file: File): Promise<string[] | null> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -374,8 +335,7 @@ const AutomatedPublishing = () => {
       }
     });
   };
-
-  // Add the processAutomation function
+  
   const processAutomation = async () => {
     if (isRunningAction) return;
     
@@ -402,8 +362,7 @@ const AutomatedPublishing = () => {
       setIsRunningAction(false);
     }
   };
-
-  // Add the processSource function
+  
   const processSource = async (source: AutomationSource) => {
     if (!source.isActive) return;
     
@@ -469,8 +428,7 @@ const AutomatedPublishing = () => {
       });
     }
   };
-
-  // Add the generateArticle function
+  
   const generateArticle = async (title: string) => {
     try {
       if (!openRouterConfig.apiKey) {
@@ -565,6 +523,44 @@ const AutomatedPublishing = () => {
         success: false, 
         error: error instanceof Error ? error.message : "Unknown error" 
       };
+    }
+  };
+  
+  const toggleSourceStatus = (id: string, isActive: boolean) => {
+    setSources(sources.map(s => 
+      s.id === id ? { ...s, isActive } : s
+    ));
+    
+    toast({
+      title: isActive ? "Source activated" : "Source paused",
+      description: `The automation source has been ${isActive ? "activated" : "paused"}.`,
+    });
+  };
+  
+  const deleteSource = (id: string) => {
+    setSources(sources.filter(s => s.id !== id));
+    
+    toast({
+      title: "Source deleted",
+      description: "The automation source has been deleted.",
+    });
+  };
+  
+  const handleIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setPollingInterval(value);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      toast({
+        title: "File uploaded",
+        description: `${file.name} has been uploaded.`,
+      });
     }
   };
   
@@ -907,3 +903,212 @@ const AutomatedPublishing = () => {
                     {isAddingSource ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {isEditingSource ? "Updating..." : "Adding..."}
+                      </>
+                    ) : (
+                      isEditingSource ? "Update Source" : "Add Source"
+                    )}
+                  </Button>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+            
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this automation source and cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteSource}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="default" className="pt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Default Generation Settings</CardTitle>
+              <CardDescription>
+                Configure the default settings for article generation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="language">Language</Label>
+                    <Select value={language} onValueChange={setLanguage}>
+                      <SelectTrigger id="language">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Spanish</SelectItem>
+                        <SelectItem value="fr">French</SelectItem>
+                        <SelectItem value="de">German</SelectItem>
+                        <SelectItem value="hi">Hindi</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="tone">Tone</Label>
+                    <Select value={tone} onValueChange={setTone}>
+                      <SelectTrigger id="tone">
+                        <SelectValue placeholder="Select tone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="professional">Professional</SelectItem>
+                        <SelectItem value="casual">Casual</SelectItem>
+                        <SelectItem value="friendly">Friendly</SelectItem>
+                        <SelectItem value="formal">Formal</SelectItem>
+                        <SelectItem value="expert">Expert</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">General</SelectItem>
+                        <SelectItem value="technology">Technology</SelectItem>
+                        <SelectItem value="business">Business</SelectItem>
+                        <SelectItem value="health">Health</SelectItem>
+                        <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="word-count">Word Count</Label>
+                    <Select value={wordCount} onValueChange={setWordCount}>
+                      <SelectTrigger id="word-count">
+                        <SelectValue placeholder="Select word count" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="500">500 words</SelectItem>
+                        <SelectItem value="800">800 words</SelectItem>
+                        <SelectItem value="1000">1,000 words</SelectItem>
+                        <SelectItem value="1500">1,500 words</SelectItem>
+                        <SelectItem value="2000">2,000 words</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="auto-publish"
+                      checked={autoPublish}
+                      onCheckedChange={setAutoPublish}
+                    />
+                    <Label htmlFor="auto-publish">Auto-publish to WordPress</Label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="custom-prompt">Custom Prompt Template</Label>
+                <Textarea
+                  id="custom-prompt"
+                  placeholder="Enter custom prompt with {TITLE} placeholder"
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  rows={6}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use {'{TITLE}'} as a placeholder for the article title in your prompt.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="logs" className="pt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Automation Logs</CardTitle>
+                <CardDescription>
+                  View recent activity for automated content generation
+                </CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={clearLogs}
+                size="sm"
+                className="h-8"
+              >
+                Clear Logs
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {logs.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No logs available yet.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Source</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Message</TableHead>
+                      <TableHead>Time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {logs.map(log => (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-medium">{log.sourceName}</TableCell>
+                        <TableCell>
+                          {log.status === "processing" ? (
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <RefreshCw className="h-3 w-3 animate-spin" />
+                              Processing
+                            </Badge>
+                          ) : log.status === "success" ? (
+                            <Badge variant="default" className="bg-green-500">
+                              Success
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              Failed
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-md truncate">
+                          {log.message}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(log.timestamp), "MMM d, h:mm a")}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default AutomatedPublishing;
